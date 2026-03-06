@@ -17,7 +17,9 @@ import 'package:permission_handler/permission_handler.dart';
 
 // Project imports:
 import 'package:openlib/services/database.dart';
+import 'package:openlib/services/download_manager.dart';
 import 'package:openlib/services/logger.dart';
+import 'package:openlib/services/mirror_fetcher.dart';
 import 'package:openlib/ui/about_page.dart';
 import 'package:openlib/ui/instances_page.dart';
 import 'package:openlib/ui/onboarding/onboarding_page.dart';
@@ -34,7 +36,10 @@ import 'package:openlib/state/state.dart'
         currentInstanceProvider,
         archiveInstancesProvider,
         donationKeyProvider,
+        cookieProvider,
+        isLoggedInProvider,
         myLibraryProvider;
+import 'package:openlib/ui/login_page.dart';
 
 // Scans a directory for book files (epub, pdf) and imports them to the library database
 Future<void> scanAndImportBooks(
@@ -294,6 +299,9 @@ class SettingsPage extends ConsumerWidget {
               },
             ),
             const SizedBox(height: 20),
+            _buildSectionHeader(context, "Account"),
+            _buildAccountTile(context, ref),
+            const SizedBox(height: 20),
             _buildSectionHeader(context, "Advanced"),
             _buildSwitchTile(
               context,
@@ -442,6 +450,69 @@ class SettingsPage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildAccountTile(BuildContext context, WidgetRef ref) {
+    final isLoggedIn = ref.watch(isLoggedInProvider);
+    if (isLoggedIn) {
+      return _buildSettingTile(
+        context,
+        title: "Logged in",
+        subtitle: "Tap to log out",
+        icon: Icons.logout,
+        onTap: () async {
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text("Log out?"),
+              content: const Text(
+                  "This will clear your session. You can log in again later."),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text("Cancel",
+                      style: TextStyle(
+                          color:
+                              Theme.of(context).brightness == Brightness.light
+                                  ? Colors.black
+                                  : Colors.white)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text("Log out",
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.error)),
+                ),
+              ],
+            ),
+          );
+          if (confirmed == true) {
+            await MyLibraryDb.instance.setBrowserOptions('cookie', '');
+            ref.read(cookieProvider.notifier).state = '';
+            DownloadManager().setCookie('');
+            MirrorFetcherService().setCookie('');
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Logged out')),
+              );
+            }
+          }
+        },
+      );
+    } else {
+      return _buildSettingTile(
+        context,
+        title: "Anna's Archive Account",
+        subtitle: "Log in for member features",
+        icon: Icons.person,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+          );
+        },
+      );
+    }
   }
 
   Widget _buildSectionHeader(BuildContext context, String title) {

@@ -113,6 +113,12 @@ class DownloadManager {
   final DownloadNotificationService _notificationService =
       DownloadNotificationService();
   final AppLogger _logger = AppLogger();
+  String _cookie = "";
+
+  /// Set the authentication cookie for download requests
+  void setCookie(String cookie) {
+    _cookie = cookie;
+  }
 
   final Map<String, DownloadTask> _activeDownloads = {};
   final StreamController<Map<String, DownloadTask>> _downloadsController =
@@ -150,7 +156,8 @@ class DownloadManager {
       if (element.contains('ipfs')) {
         ipfsMirrors.add(element);
       } else {
-        if (!element.startsWith('https://annas-archive.org') &&
+        if (!element.startsWith('https://annas-archive.gd') &&
+            !element.startsWith('https://annas-archive.org') &&
             !element.startsWith('https://1lib.sk')) {
           httpsMirrors.add(element);
         }
@@ -633,6 +640,7 @@ class DownloadManager {
           'Connection': 'Keep-Alive',
           'User-Agent':
               'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36',
+          if (_cookie.isNotEmpty) 'Cookie': _cookie,
         },
       );
 

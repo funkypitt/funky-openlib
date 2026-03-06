@@ -28,6 +28,7 @@ import 'package:openlib/services/files.dart'
 import 'package:openlib/services/download_manager.dart';
 import 'package:openlib/services/download_notification.dart';
 import 'package:openlib/services/instance_manager.dart';
+import 'package:openlib/services/mirror_fetcher.dart';
 import 'package:openlib/state/state.dart'
     show
         ThemeModeNotifier,
@@ -103,6 +104,12 @@ void main(List<String> args) async {
 
   String browserUserAgent = await dataBase.getBrowserOptions('userAgent');
   String browserCookie = await dataBase.getBrowserOptions('cookie');
+
+  // Pass the cookie to singleton services
+  if (browserCookie.isNotEmpty) {
+    DownloadManager().setCookie(browserCookie);
+    MirrorFetcherService().setCookie(browserCookie);
+  }
 
   // Load search filter preferences
   String savedType = await dataBase

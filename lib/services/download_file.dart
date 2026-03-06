@@ -27,7 +27,8 @@ List<String> _reorderMirrors(List<String> mirrors) {
     if (element.contains('ipfs') == true) {
       ipfsMirrors.add(element);
     } else {
-      if (element.startsWith('https://annas-archive.org') != true &&
+      if (element.startsWith('https://annas-archive.gd') != true &&
+          element.startsWith('https://annas-archive.org') != true &&
           element.startsWith('https://1lib.sk') != true) {
         httpsMirrors.add(element);
       }

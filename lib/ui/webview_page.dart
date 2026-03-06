@@ -21,11 +21,14 @@ class Webview extends ConsumerStatefulWidget {
     super.key,
     required this.url,
     this.showOverlay = true,
+    this.cookie = '',
   });
 
   final String url;
   // When false, shows the full page for manual verification with CAPTCHA
   final bool showOverlay;
+  // Authentication cookie to pre-load into the WebView
+  final String cookie;
 
   @override
   // ignore: library_private_types_in_public_api
@@ -52,6 +55,36 @@ class _WebviewState extends ConsumerState<Webview> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _openDesktopWebview();
       });
+    } else if (widget.cookie.isNotEmpty) {
+      // Pre-load auth cookies into the WebView cookie manager
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _preloadCookies();
+      });
+    }
+  }
+
+  Future<void> _preloadCookies() async {
+    try {
+      final uri = Uri.parse(widget.url);
+      final domain = uri.host;
+      final cookiePairs = widget.cookie.split('; ');
+      for (final pair in cookiePairs) {
+        final idx = pair.indexOf('=');
+        if (idx > 0) {
+          final name = pair.substring(0, idx);
+          final value = pair.substring(idx + 1);
+          await CookieManager.instance().setCookie(
+            url: WebUri('https://$domain'),
+            name: name,
+            value: value,
+            domain: domain,
+          );
+        }
+      }
+      _logger.debug('Pre-loaded ${cookiePairs.length} cookies into WebView',
+          tag: 'WebView');
+    } catch (e) {
+      _logger.error('Failed to pre-load cookies', tag: 'WebView', error: e);
     }
   }
 

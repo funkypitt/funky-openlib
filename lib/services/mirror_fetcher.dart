@@ -15,6 +15,36 @@ class MirrorFetcherService {
   MirrorFetcherService._internal();
 
   final AppLogger _logger = AppLogger();
+  String _cookie = "";
+
+  /// Set the authentication cookie for mirror fetching WebViews
+  void setCookie(String cookie) {
+    _cookie = cookie;
+  }
+
+  /// Pre-load cookies into the InAppWebView CookieManager for a given URL
+  Future<void> _preloadCookies(String url) async {
+    if (_cookie.isEmpty) return;
+    try {
+      final uri = Uri.parse(url);
+      final domain = uri.host;
+      final cookiePairs = _cookie.split('; ');
+      for (final pair in cookiePairs) {
+        final idx = pair.indexOf('=');
+        if (idx > 0) {
+          await CookieManager.instance().setCookie(
+            url: WebUri('https://$domain'),
+            name: pair.substring(0, idx),
+            value: pair.substring(idx + 1),
+            domain: domain,
+          );
+        }
+      }
+    } catch (e) {
+      _logger.error('Failed to pre-load cookies for mirror fetch',
+          tag: 'MirrorFetcher', error: e);
+    }
+  }
 
   /// Fetch mirror links from the given URL in the background
   /// Returns a list of mirror download links
@@ -31,6 +61,9 @@ class MirrorFetcherService {
     final List<String> bookDownloadLinks = [];
 
     try {
+      // Pre-load cookies before creating the headless webview
+      await _preloadCookies(url);
+
       // Create a headless webview to load the page
       final headlessWebView = HeadlessInAppWebView(
         initialUrlRequest: URLRequest(url: WebUri(url)),

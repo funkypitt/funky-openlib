@@ -36,7 +36,8 @@ import 'package:openlib/state/state.dart'
         myLibraryProvider,
         showManualDownloadButtonProvider,
         downloadManagerProvider,
-        donationKeyProvider;
+        donationKeyProvider,
+        cookieProvider;
 
 class BookInfoPage extends ConsumerWidget {
   const BookInfoPage({super.key, required this.url});
@@ -181,7 +182,7 @@ class _ActionButtonWidgetState extends ConsumerState<ActionButtonWidget> {
                           context,
                           MaterialPageRoute(
                             builder: (BuildContext context) =>
-                                Webview(url: downloadUrl!),
+                                Webview(url: downloadUrl!, cookie: ref.read(cookieProvider)),
                           ),
                         );
 
@@ -284,7 +285,7 @@ class _ActionButtonWidgetState extends ConsumerState<ActionButtonWidget> {
                           context,
                           MaterialPageRoute(
                             builder: (BuildContext context) =>
-                                Webview(url: widget.data.mirror!),
+                                Webview(url: widget.data.mirror!, cookie: ref.read(cookieProvider)),
                           ),
                         );
 

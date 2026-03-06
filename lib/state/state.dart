@@ -238,6 +238,11 @@ final enableFiltersState = StateProvider<bool>((ref) => true);
 final donationKeyProvider = StateProvider<String>((ref) => "");
 final cookieProvider = StateProvider<String>((ref) => "");
 final userAgentProvider = StateProvider<String>((ref) => "");
+
+// Authentication State
+final isLoggedInProvider = Provider<bool>((ref) {
+  return ref.watch(cookieProvider).isNotEmpty;
+});
 final webViewLoadingState = StateProvider.autoDispose<bool>((ref) => true);
 final downloadProgressProvider =
     StateProvider.autoDispose<double>((ref) => 0.0);
@@ -394,6 +399,7 @@ final searchProvider = FutureProvider.family
   }
 
   final AnnasArchieve annasArchieve = AnnasArchieve();
+  annasArchieve.setCookie(ref.watch(cookieProvider));
   List<BookData> data = await annasArchieve.searchBooks(
       searchQuery: searchQuery,
       content: ref.watch(getTypeValue),
@@ -409,6 +415,7 @@ final searchProvider = FutureProvider.family
 final bookInfoProvider =
     FutureProvider.family<BookInfoData, String>((ref, url) async {
   final AnnasArchieve annasArchieve = AnnasArchieve();
+  annasArchieve.setCookie(ref.watch(cookieProvider));
   final donationKey = ref.watch(donationKeyProvider);
   BookInfoData data =
       await annasArchieve.bookInfo(url: url, donationKey: donationKey);

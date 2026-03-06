@@ -240,6 +240,7 @@ class _DownloadItemState extends ConsumerState<_DownloadItem> {
         builder: (BuildContext context) => Webview(
           url: task.mirrorUrl!,
           showOverlay: false, // Show full page for CAPTCHA interaction
+          cookie: ref.read(cookieProvider),
         ),
       ),
     );

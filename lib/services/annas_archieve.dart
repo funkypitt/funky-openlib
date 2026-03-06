@@ -60,11 +60,12 @@ class BookInfoData extends BookData {
 // ====================================================================
 
 class AnnasArchieve {
-  static const String baseUrl = "https://annas-archive.org"; // Fallback default
+  static const String baseUrl = "https://annas-archive.gd"; // Fallback default
 
   final Dio dio = Dio();
   final InstanceManager _instanceManager = InstanceManager();
   final AppLogger _logger = AppLogger();
+  String _cookie = "";
 
   // Optimized retry settings for faster response
   static const int maxRetriesPerInstance =
@@ -76,6 +77,16 @@ class AnnasArchieve {
     "user-agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
   };
+
+  /// Set the authentication cookie for all requests
+  void setCookie(String cookie) {
+    _cookie = cookie;
+    if (cookie.isNotEmpty) {
+      defaultDioHeaders["cookie"] = cookie;
+    } else {
+      defaultDioHeaders.remove("cookie");
+    }
+  }
 
   // Check for Cloudflare block in response
   bool _isCloudflareBlocked(Response response) {
