@@ -227,10 +227,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         _checkAndRequestNotificationPermission();
       });
     }
-    // Check for updates after the app has loaded
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkForUpdatesOnStartup();
-    });
+    // Update check on startup disabled
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   _checkForUpdatesOnStartup();
+    // });
     // Auto-rank instances on startup if enabled
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _autoRankInstancesOnStartup();
