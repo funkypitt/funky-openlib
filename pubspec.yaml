@@ -49,7 +49,7 @@ dependencies:
   open_file: ^3.3.2
 
   flutter_svg: ^2.0.7
-  google_fonts: ^6.1.0
+  google_fonts: ^8.0.0
 
   cached_network_image: 3.3.0
 
