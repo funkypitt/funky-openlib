@@ -95,9 +95,34 @@ function loadBook(base64Data) {
       });
     });
 
+    // Handle taps inside the epub iframe content for page turning
+    rendition.on("displayed", function(section) {
+      try {
+        var iframeDoc = rendition.getContents()[0];
+        if (iframeDoc && iframeDoc.document) {
+          iframeDoc.document.addEventListener("click", handleTap);
+        }
+      } catch(e) {}
+    });
+
     rendition.display();
   } catch(e) {
     document.getElementById("loading").textContent = "Error: " + e.message;
+  }
+}
+
+// Handle tap on the outer document as well
+document.addEventListener("click", handleTap);
+
+function handleTap(e) {
+  if (!rendition) return;
+  var w = window.innerWidth;
+  var x = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : -1);
+  if (x < 0) return;
+  if (x < w * 0.3) {
+    rendition.prev();
+  } else if (x > w * 0.7) {
+    rendition.next();
   }
 }
 

@@ -234,18 +234,7 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
                     ),
                   );
                 }
-                return GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTapUp: (details) {
-                    final width = MediaQuery.of(context).size.width;
-                    final x = details.localPosition.dx;
-                    if (x < width * 0.3) {
-                      _goPrev();
-                    } else if (x > width * 0.7) {
-                      _goNext();
-                    }
-                  },
-                  child: InAppWebView(
+                return InAppWebView(
                     initialUrlRequest:
                         URLRequest(url: WebUri(snapshot.data!)),
                     initialSettings: InAppWebViewSettings(
@@ -311,8 +300,7 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
                     onLoadStop: (controller, url) async {
                       await _injectBook();
                     },
-                  ),
-                );
+                  );
               },
             ),
             if (_isLoading)
