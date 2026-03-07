@@ -263,6 +263,12 @@ final totalPdfPage = StateProvider.autoDispose<int>((ref) => 0);
 final openPdfWithExternalAppProvider = StateProvider<bool>((ref) => false);
 final openEpubWithExternalAppProvider = StateProvider<bool>((ref) => false);
 
+// EPUB Reader View Mode: 'page' (epub.js paginated) or 'scroll' (epub_view scroll)
+final epubViewModeProvider = StateProvider<String>((ref) => 'page');
+
+// EPUB Reader Font Size: 0 = auto-detect based on screen size
+final epubReaderFontSizeProvider = StateProvider<int>((ref) => 0);
+
 // Download Settings
 final showManualDownloadButtonProvider = StateProvider<bool>((ref) => false);
 

@@ -37,6 +37,8 @@ import 'package:openlib/state/state.dart'
         fontSizeScaleProvider,
         openPdfWithExternalAppProvider,
         openEpubWithExternalAppProvider,
+        epubViewModeProvider,
+        epubReaderFontSizeProvider,
         showManualDownloadButtonProvider,
         autoRankInstancesProvider,
         userAgentProvider,
@@ -138,6 +140,27 @@ void main(List<String> args) async {
           .catchError((e) => '') as String? ??
       '';
 
+  // Load EPUB view mode preference
+  String savedEpubViewMode = await dataBase
+          .getPreference('epubViewMode')
+          .catchError((e) => 'page') as String? ??
+      'page';
+
+  // Load EPUB reader font size preference (0 = auto)
+  int savedEpubFontSize = 0;
+  try {
+    var epubFontPref = await dataBase
+        .getPreference('epubReaderFontSize')
+        .catchError((e) => 0);
+    if (epubFontPref is int) {
+      savedEpubFontSize = epubFontPref;
+    } else if (epubFontPref is String) {
+      savedEpubFontSize = int.tryParse(epubFontPref) ?? 0;
+    }
+  } catch (e) {
+    savedEpubFontSize = 0;
+  }
+
   // Check onboarding status
   bool onboardingCompleted = await dataBase
           .getPreference('onboardingCompleted')
@@ -162,6 +185,8 @@ void main(List<String> args) async {
             .overrideWith((ref) => openEpubwithExternalapp),
         showManualDownloadButtonProvider
             .overrideWith((ref) => showManualDownloadButton),
+        epubViewModeProvider.overrideWith((ref) => savedEpubViewMode),
+        epubReaderFontSizeProvider.overrideWith((ref) => savedEpubFontSize),
         donationKeyProvider.overrideWith((ref) => savedDonationKey),
         userAgentProvider.overrideWith((ref) => browserUserAgent),
         cookieProvider.overrideWith((ref) => browserCookie),

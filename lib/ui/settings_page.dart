@@ -30,6 +30,8 @@ import 'package:openlib/state/state.dart'
         fontSizeScaleProvider,
         openPdfWithExternalAppProvider,
         openEpubWithExternalAppProvider,
+        epubViewModeProvider,
+        epubReaderFontSizeProvider,
         showManualDownloadButtonProvider,
         autoRankInstancesProvider,
         instanceManagerProvider,
@@ -135,6 +137,8 @@ class SettingsPage extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final openPdfExternal = ref.watch(openPdfWithExternalAppProvider);
     final openEpubExternal = ref.watch(openEpubWithExternalAppProvider);
+    final epubViewMode = ref.watch(epubViewModeProvider);
+    final epubFontSize = ref.watch(epubReaderFontSizeProvider);
     final showManualDownload = ref.watch(showManualDownloadButtonProvider);
     final fontSizeScale = ref.watch(fontSizeScaleProvider);
 
@@ -297,6 +301,82 @@ class SettingsPage extends ConsumerWidget {
                 ref.read(openEpubWithExternalAppProvider.notifier).state = val;
                 dataBase.savePreference('openEpubwithExternalApp', val);
               },
+            ),
+            // EPUB View Mode (hidden on Linux where WebView is not supported)
+            if (PlatformUtils.isWebViewSupported)
+              _buildSettingCard(
+                context,
+                title: "EPUB View Mode",
+                child: DropdownButton<String>(
+                  value: epubViewMode,
+                  isExpanded: true,
+                  underline: const SizedBox(),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'page',
+                      child: Text('Page View (recommended)'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'scroll',
+                      child: Text('Scroll View'),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      ref.read(epubViewModeProvider.notifier).state = val;
+                      dataBase.savePreference('epubViewMode', val);
+                    }
+                  },
+                ),
+              ),
+            // EPUB Reader Font Size
+            _buildSettingCard(
+              context,
+              title: "EPUB Reader Font Size",
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    epubFontSize == 0
+                        ? "Auto-detect based on screen size"
+                        : "${epubFontSize}px",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .tertiary
+                          .withValues(alpha: 0.67),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      const Text("Auto", style: TextStyle(fontSize: 12)),
+                      Expanded(
+                        child: Slider(
+                          value: epubFontSize.toDouble(),
+                          min: 0,
+                          max: 32,
+                          divisions: 32,
+                          label: epubFontSize == 0
+                              ? "Auto"
+                              : "${epubFontSize}px",
+                          activeColor:
+                              Theme.of(context).colorScheme.secondary,
+                          onChanged: (val) {
+                            final intVal = val.round();
+                            ref
+                                .read(epubReaderFontSizeProvider.notifier)
+                                .state = intVal;
+                            dataBase.savePreference(
+                                'epubReaderFontSize', intVal);
+                          },
+                        ),
+                      ),
+                      const Text("32px", style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 20),
             _buildSectionHeader(context, "Account"),

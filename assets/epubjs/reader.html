@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: #ffffff;
+    color: #000000;
+    transition: background 0.2s, color 0.2s;
+  }
+  body.dark {
+    background: #121212;
+    color: #f5f5f5;
+  }
+  #viewer {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  #loading {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: sans-serif;
+    font-size: 16px;
+    color: #888;
+  }
+</style>
+<script src="jszip.min.js"></script>
+<script src="epub.min.js"></script>
+</head>
+<body>
+<div id="viewer"></div>
+<div id="loading">Loading...</div>
+<script>
+var book = null;
+var rendition = null;
+var currentCfi = null;
+
+function loadBook(base64Data) {
+  try {
+    var raw = atob(base64Data);
+    var len = raw.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+      bytes[i] = raw.charCodeAt(i);
+    }
+
+    book = ePub(bytes.buffer);
+    rendition = book.renderTo("viewer", {
+      width: "100%",
+      height: "100%",
+      flow: "paginated",
+      spread: "none",
+      allowScriptedContent: true
+    });
+
+    rendition.on("relocated", function(location) {
+      currentCfi = location.start.cfi;
+      var progress = book.locations ? (location.start.percentage || 0) : 0;
+      try {
+        window.flutter_inappwebview.callHandler("onRelocated", currentCfi, progress);
+      } catch(e) {}
+    });
+
+    book.ready.then(function() {
+      document.getElementById("loading").style.display = "none";
+
+      // Build TOC
+      var tocData = [];
+      if (book.navigation && book.navigation.toc) {
+        book.navigation.toc.forEach(function(item) {
+          tocData.push({ label: item.label.trim(), href: item.href });
+          if (item.subitems) {
+            item.subitems.forEach(function(sub) {
+              tocData.push({ label: "  " + sub.label.trim(), href: sub.href });
+            });
+          }
+        });
+      }
+      try {
+        window.flutter_inappwebview.callHandler("onBookReady", JSON.stringify(tocData));
+      } catch(e) {}
+
+      // Generate locations for progress tracking
+      book.locations.generate(1600).then(function() {
+        if (currentCfi) {
+          try {
+            window.flutter_inappwebview.callHandler("onLocationsReady");
+          } catch(e) {}
+        }
+      });
+    });
+
+    rendition.display();
+  } catch(e) {
+    document.getElementById("loading").textContent = "Error: " + e.message;
+  }
+}
+
+function goNext() {
+  if (rendition) rendition.next();
+}
+
+function goPrev() {
+  if (rendition) rendition.prev();
+}
+
+function goToCfi(cfi) {
+  if (rendition && cfi) {
+    rendition.display(cfi);
+  }
+}
+
+function goToHref(href) {
+  if (rendition && href) {
+    rendition.display(href);
+  }
+}
+
+function setFontSize(px) {
+  if (rendition) {
+    rendition.themes.fontSize(px + "px");
+  }
+}
+
+function setTheme(isDark) {
+  if (isDark) {
+    document.body.classList.add("dark");
+    if (rendition) {
+      rendition.themes.override("color", "#f5f5f5");
+      rendition.themes.override("background", "#121212");
+    }
+  } else {
+    document.body.classList.remove("dark");
+    if (rendition) {
+      rendition.themes.override("color", "#000000");
+      rendition.themes.override("background", "#ffffff");
+    }
+  }
+}
+
+function getCurrentCfi() {
+  return currentCfi || "";
+}
+</script>
+</body>
+</html>
