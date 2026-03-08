@@ -10,21 +10,21 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:openlib/services/files.dart';
-import 'package:openlib/services/platform_utils.dart';
-import 'package:openlib/services/update_checker.dart';
+import 'package:openlibe_eink_remix/services/files.dart';
+import 'package:openlibe_eink_remix/services/platform_utils.dart';
+import 'package:openlibe_eink_remix/services/update_checker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 // Project imports:
-import 'package:openlib/services/database.dart';
-import 'package:openlib/services/download_manager.dart';
-import 'package:openlib/services/logger.dart';
-import 'package:openlib/services/mirror_fetcher.dart';
-import 'package:openlib/ui/about_page.dart';
-import 'package:openlib/ui/instances_page.dart';
-import 'package:openlib/ui/onboarding/onboarding_page.dart';
+import 'package:openlibe_eink_remix/services/database.dart';
+import 'package:openlibe_eink_remix/services/download_manager.dart';
+import 'package:openlibe_eink_remix/services/logger.dart';
+import 'package:openlibe_eink_remix/services/mirror_fetcher.dart';
+import 'package:openlibe_eink_remix/ui/about_page.dart';
+import 'package:openlibe_eink_remix/ui/instances_page.dart';
+import 'package:openlibe_eink_remix/ui/onboarding/onboarding_page.dart';
 
-import 'package:openlib/state/state.dart'
+import 'package:openlibe_eink_remix/state/state.dart'
     show
         themeModeProvider,
         fontSizeScaleProvider,
@@ -41,7 +41,7 @@ import 'package:openlib/state/state.dart'
         cookieProvider,
         isLoggedInProvider,
         myLibraryProvider;
-import 'package:openlib/ui/login_page.dart';
+import 'package:openlibe_eink_remix/ui/login_page.dart';
 
 // Scans a directory for book files (epub, pdf) and imports them to the library database
 Future<void> scanAndImportBooks(
@@ -452,7 +452,7 @@ class SettingsPage extends ConsumerWidget {
             _buildSectionHeader(context, "About"),
             _buildSettingTile(
               context,
-              title: "About OpenlibExtended",
+              title: "About OpenLibeExtended-eInk-Remix",
               icon: Icons.info_outline,
               onTap: () {
                 Navigator.push(context,

@@ -140,10 +140,10 @@ jobs:
         run: |
           mkdir -p artifacts
           # Naming convention: contains "android" and architecture keywords for update_checker detection
-          cp build/app/outputs/flutter-apk/app-release.apk artifacts/openlib-android-universal-${{ needs.prepare.outputs.version }}.apk
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk artifacts/openlib-android-arm64-${{ needs.prepare.outputs.version }}.apk
-          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk artifacts/openlib-android-armeabi-v7a-${{ needs.prepare.outputs.version }}.apk
-          cp build/app/outputs/flutter-apk/app-x86_64-release.apk artifacts/openlib-android-x86_64-${{ needs.prepare.outputs.version }}.apk || true
+          cp build/app/outputs/flutter-apk/app-release.apk artifacts/openlibe-eink-remix-android-universal-${{ needs.prepare.outputs.version }}.apk
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk artifacts/openlibe-eink-remix-android-arm64-${{ needs.prepare.outputs.version }}.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk artifacts/openlibe-eink-remix-android-armeabi-v7a-${{ needs.prepare.outputs.version }}.apk
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk artifacts/openlibe-eink-remix-android-x86_64-${{ needs.prepare.outputs.version }}.apk || true
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -189,7 +189,7 @@ jobs:
           mkdir -p artifacts
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r artifacts/openlib-ios-${{ needs.prepare.outputs.version }}.ipa Payload
+          zip -r artifacts/openlibe-eink-remix-ios-${{ needs.prepare.outputs.version }}.ipa Payload
           rm -rf Payload
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -231,13 +231,13 @@ jobs:
           # Create Inno Setup script
           @"
           [Setup]
-          AppName=OpenLibExtended
+          AppName=OpenLibeExtended-eInk-Remix
           AppVersion=${{ needs.prepare.outputs.version }}
           AppPublisher=warreth
-          DefaultDirName={autopf}\OpenLibExtended
-          DefaultGroupName=OpenLibExtended
+          DefaultDirName={autopf}\OpenLibeExtended-eInk-Remix
+          DefaultGroupName=OpenLibeExtended-eInk-Remix
           OutputDir=artifacts
-          OutputBaseFilename=openlib-windows-x64-${{ needs.prepare.outputs.version }}
+          OutputBaseFilename=openlibe-eink-remix-windows-x64-${{ needs.prepare.outputs.version }}
           Compression=lzma
           SolidCompression=yes
           ArchitecturesInstallIn64BitMode=x64compatible
@@ -249,10 +249,10 @@ jobs:
           [Files]
           Source: "build\windows\x64\runner\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
           [Icons]
-          Name: "{group}\OpenLibExtended"; Filename: "{app}\OpenLibExtended.exe"
-          Name: "{autodesktop}\OpenLibExtended"; Filename: "{app}\OpenLibExtended.exe"
+          Name: "{group}\OpenLibeExtended-eInk-Remix"; Filename: "{app}\OpenLibeExtended-eInk-Remix.exe"
+          Name: "{autodesktop}\OpenLibeExtended-eInk-Remix"; Filename: "{app}\OpenLibeExtended-eInk-Remix.exe"
           [Run]
-          Filename: "{app}\OpenLibExtended.exe"; Description: "Launch OpenLibExtended"; Flags: nowait postinstall skipifsilent
+          Filename: "{app}\OpenLibeExtended-eInk-Remix.exe"; Description: "Launch OpenLibeExtended-eInk-Remix"; Flags: nowait postinstall skipifsilent
           "@ | Out-File -FilePath "installer.iss" -Encoding UTF8
           mkdir artifacts
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
@@ -298,20 +298,20 @@ jobs:
           # Create AppDir structure
           mkdir -p AppDir/usr/{bin,lib,share/applications,share/icons/hicolor/256x256/apps}
           cp -r build/linux/x64/release/bundle/* AppDir/usr/bin/
-          cp assets/icons/appIcon.png AppDir/usr/share/icons/hicolor/256x256/apps/openlibextended.png
-          cp assets/icons/appIcon.png AppDir/openlibextended.png
+          cp assets/icons/appIcon.png AppDir/usr/share/icons/hicolor/256x256/apps/openlibeextendedeinkremix.png
+          cp assets/icons/appIcon.png AppDir/openlibeextendedeinkremix.png
           # Create desktop entry
-          cat > AppDir/openlibextended.desktop << 'EOF'
+          cat > AppDir/openlibeextendedeinkremix.desktop << 'EOF'
           [Desktop Entry]
-          Name=OpenLibExtended
+          Name=OpenLibeExtended-eInk-Remix
           Comment=Download and read books from shadow library
-          Exec=OpenLibExtended
-          Icon=openlibextended
+          Exec=OpenLibeExtended-eInk-Remix
+          Icon=openlibeextendedeinkremix
           Type=Application
           Categories=Education;Literature;
           Keywords=books;library;epub;pdf;reader;
           EOF
-          cp AppDir/openlibextended.desktop AppDir/usr/share/applications/
+          cp AppDir/openlibeextendedeinkremix.desktop AppDir/usr/share/applications/
           # Create AppRun
           cat > AppDir/AppRun << 'EOF'
           #!/bin/bash
@@ -319,15 +319,15 @@ jobs:
           HERE=${SELF%/*}
           export PATH="${HERE}/usr/bin/:${PATH}"
           export LD_LIBRARY_PATH="${HERE}/usr/lib/:${LD_LIBRARY_PATH}"
-          exec "${HERE}/usr/bin/OpenLibExtended" "$@"
+          exec "${HERE}/usr/bin/OpenLibeExtended-eInk-Remix" "$@"
           EOF
           chmod +x AppDir/AppRun
           # Build AppImage
-          ARCH=x86_64 ./appimagetool-x86_64.AppImage --no-appstream AppDir artifacts/openlib-linux-x64-${{ needs.prepare.outputs.version }}.AppImage
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage --no-appstream AppDir artifacts/openlibe-eink-remix-linux-x64-${{ needs.prepare.outputs.version }}.AppImage
       - name: Create tar.gz archive
         run: |
           cd build/linux/x64/release/bundle
-          tar -czvf ${{ github.workspace }}/artifacts/openlib-linux-x64-${{ needs.prepare.outputs.version }}.tar.gz *
+          tar -czvf ${{ github.workspace }}/artifacts/openlibe-eink-remix-linux-x64-${{ needs.prepare.outputs.version }}.tar.gz *
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -357,15 +357,15 @@ jobs:
       - name: Extract Linux bundle
         run: |
           mkdir -p build/linux/x64/release/bundle
-          tar -xzf linux-artifacts/openlib-linux-x64-${{ needs.prepare.outputs.version }}.tar.gz -C build/linux/x64/release/bundle
+          tar -xzf linux-artifacts/openlibe-eink-remix-linux-x64-${{ needs.prepare.outputs.version }}.tar.gz -C build/linux/x64/release/bundle
       - name: Create Flatpak manifest
         run: |
-          cat > com.app.openlibextended.yml << EOF
-          app-id: com.app.openlibextended
+          cat > com.app.openlibeextendedeinkremix.yml << EOF
+          app-id: com.app.openlibeextendedeinkremix
           runtime: org.freedesktop.Platform
           runtime-version: '24.08'
           sdk: org.freedesktop.Sdk
-          command: openlibextended
+          command: openlibeextendedeinkremix
           finish-args:
             - --share=ipc
             - --socket=fallback-x11
@@ -374,11 +374,11 @@ jobs:
             - --share=network
             - --filesystem=home
           modules:
-            - name: openlibextended
+            - name: openlibeextendedeinkremix
               buildsystem: simple
               build-commands:
                 - cp -r bundle /app/
-                - ln -s /app/bundle/OpenLibExtended /app/bin/openlibextended
+                - ln -s /app/bundle/OpenLibeExtended-eInk-Remix /app/bin/openlibeextendedeinkremix
               sources:
                 - type: dir
                   path: build/linux/x64/release/bundle
@@ -387,8 +387,8 @@ jobs:
       - name: Build Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
-          bundle: openlib-linux-${{ needs.prepare.outputs.version }}.flatpak
-          manifest-path: com.app.openlibextended.yml
+          bundle: openlibe-eink-remix-linux-${{ needs.prepare.outputs.version }}.flatpak
+          manifest-path: com.app.openlibeextendedeinkremix.yml
           cache-key: flatpak-builder-${{ github.sha }}
 
       - name: Upload artifacts

@@ -1,7 +1,7 @@
 
-# Openlib Project Setup Guide
+# OpenLibeExtended-eInk-Remix Project Setup Guide
 
-Welcome to the **Openlib Project**! This guide will walk you through setting up the project on your local machine, specifically focusing on **Android Studio**. 
+Welcome to the **OpenLibeExtended-eInk-Remix Project**! This guide will walk you through setting up the project on your local machine, specifically focusing on **Android Studio**. 
 
 ### Prerequisites
 Before you begin, make sure you have the following installed and configured on your system:
@@ -28,13 +28,13 @@ cd OpenlibProject
 ### 2. Clone the Repository
 Use Git to clone the project into your newly created directory:
 ```bash
-git clone https://github.com/warreth/OpenlibExtended.git
+git clone https://github.com/warreth/OpenLibeExtended-eInk-Remix.git
 ```
 
 ### 3. Navigate to the Project Folder
-After cloning, move into the **OpenlibExtended** folder:
+After cloning, move into the **OpenLibeExtended-eInk-Remix** folder:
 ```bash
-cd OpenlibExtended
+cd OpenLibeExtended-eInk-Remix
 ```
 
 ### 4. Open the Project in Android Studio or VS Code

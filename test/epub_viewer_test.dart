@@ -2,7 +2,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 // Project imports:
-import 'package:openlib/ui/epub_viewer.dart';
+import 'package:openlibe_eink_remix/ui/epub_viewer.dart';
 
 // This test ensures that the epub_viewer.dart file compiles correctly
 // and that the EpubController methods are used correctly.

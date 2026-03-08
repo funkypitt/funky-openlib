@@ -1,4 +1,4 @@
-## Openlib Contribution guidelines
+## OpenLibeExtended-eInk-Remix Contribution guidelines
 
 ### Getting started
 

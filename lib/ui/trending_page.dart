@@ -6,11 +6,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Project imports:
-import 'package:openlib/ui/components/error_widget.dart';
-import 'package:openlib/ui/results_page.dart';
+import 'package:openlibe_eink_remix/ui/components/error_widget.dart';
+import 'package:openlibe_eink_remix/ui/results_page.dart';
 import 'extensions.dart';
 
-import 'package:openlib/state/state.dart'
+import 'package:openlibe_eink_remix/state/state.dart'
     show getTrendingBooks, enableFiltersState;
 
 class TrendingPage extends ConsumerWidget {

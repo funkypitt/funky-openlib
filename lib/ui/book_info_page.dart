@@ -6,18 +6,18 @@ import 'package:dio/dio.dart' show CancelToken;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Project imports:
-import 'package:openlib/services/annas_archieve.dart';
-import 'package:openlib/services/database.dart';
-import 'package:openlib/services/download_file.dart';
-import 'package:openlib/services/download_manager.dart';
-import 'package:openlib/services/platform_utils.dart';
-import 'package:openlib/services/share_book.dart';
-import 'package:openlib/ui/components/book_info_widget.dart';
-import 'package:openlib/ui/components/error_widget.dart';
-import 'package:openlib/ui/components/file_buttons_widget.dart';
-import 'package:openlib/ui/components/snack_bar_widget.dart';
-import 'package:openlib/ui/webview_page.dart';
-import 'package:openlib/state/state.dart'
+import 'package:openlibe_eink_remix/services/annas_archieve.dart';
+import 'package:openlibe_eink_remix/services/database.dart';
+import 'package:openlibe_eink_remix/services/download_file.dart';
+import 'package:openlibe_eink_remix/services/download_manager.dart';
+import 'package:openlibe_eink_remix/services/platform_utils.dart';
+import 'package:openlibe_eink_remix/services/share_book.dart';
+import 'package:openlibe_eink_remix/ui/components/book_info_widget.dart';
+import 'package:openlibe_eink_remix/ui/components/error_widget.dart';
+import 'package:openlibe_eink_remix/ui/components/file_buttons_widget.dart';
+import 'package:openlibe_eink_remix/ui/components/snack_bar_widget.dart';
+import 'package:openlibe_eink_remix/ui/webview_page.dart';
+import 'package:openlibe_eink_remix/state/state.dart'
     show
         bookInfoProvider,
         totalFileSizeInBytes,
@@ -50,7 +50,7 @@ class BookInfoPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        title: const Text("OpenlibExtended"),
+        title: const Text("OpenLibeExtended-eInk-Remix"),
         titleTextStyle: Theme.of(context).textTheme.displayLarge,
         actions: [
           bookInfo.maybeWhen(data: (data) {

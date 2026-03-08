@@ -6,15 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 // Project imports:
-import 'package:openlib/services/files.dart' show syncLibraryWithDisk;
-import 'package:openlib/services/platform_utils.dart';
-import 'package:openlib/state/state.dart' show myLibraryProvider;
-import 'package:openlib/ui/components/active_downloads_widget.dart';
-import 'package:openlib/ui/components/book_card_widget.dart';
-import 'package:openlib/ui/components/error_widget.dart';
-import 'package:openlib/ui/components/page_title_widget.dart';
-import 'package:openlib/ui/extensions.dart';
-import 'package:openlib/ui/mybook_page.dart';
+import 'package:openlibe_eink_remix/services/files.dart' show syncLibraryWithDisk;
+import 'package:openlibe_eink_remix/services/platform_utils.dart';
+import 'package:openlibe_eink_remix/state/state.dart' show myLibraryProvider;
+import 'package:openlibe_eink_remix/ui/components/active_downloads_widget.dart';
+import 'package:openlibe_eink_remix/ui/components/book_card_widget.dart';
+import 'package:openlibe_eink_remix/ui/components/error_widget.dart';
+import 'package:openlibe_eink_remix/ui/components/page_title_widget.dart';
+import 'package:openlibe_eink_remix/ui/extensions.dart';
+import 'package:openlibe_eink_remix/ui/mybook_page.dart';
 
 class MyLibraryPage extends ConsumerStatefulWidget {
   const MyLibraryPage({super.key});

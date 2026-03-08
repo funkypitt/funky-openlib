@@ -1,33 +1,33 @@
-# 📖 OpenlibExtended — Frequently Asked Questions
+# 📖 OpenLibeExtended-eInk-Remix — Frequently Asked Questions
 
-## What is OpenlibExtended?
-OpenlibExtended is an open source app for downloading and reading books from shadow libraries, especially Anna’s Archive. It aims to provide easy, safe, and convenient access to a wide range of e-books.
+## What is OpenLibeExtended-eInk-Remix?
+OpenLibeExtended-eInk-Remix is an open source app for downloading and reading books from shadow libraries, especially Anna’s Archive. It aims to provide easy, safe, and convenient access to a wide range of e-books.
 
 ---
 
-## How do I install OpenlibExtended?
+## How do I install OpenLibeExtended-eInk-Remix?
 **Android:**  
-- Download the latest APK from [Releases](https://github.com/warreth/OpenlibExtended/releases).
+- Download the latest APK from [Releases](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases).
 - Allow installs from “Unknown sources” if prompted.
 - Install and launch the app.
 
 **iOS:**  
-- Download the latest ipa from [Releases](https://github.com/warreth/OpenlibExtended/releases).
+- Download the latest ipa from [Releases](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases).
 - Sideload the ipa (i recommend one of [these services](https://fmhy.net/beginners-guide#ios-sideloading)
 
 **Windows:**  
-- Download the Windows build from [Releases](https://github.com/warreth/OpenlibExtended/releases).
+- Download the Windows build from [Releases](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases).
 - Run the installer
 
 **Linux:**  
-- Download the appropriate AppImage, or Flatpak from [Releases](https://github.com/warreth/OpenlibExtended/releases).
+- Download the appropriate AppImage, or Flatpak from [Releases](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases).
 - Run/install according to your distro.
 - You can also install the app from [flathub](https://flathub.org/)
 
 ---
 
-## Where does OpenlibExtended get its books from?
-OpenlibExtended downloads books from [Anna’s Archive](https://annas-archive.pm/), a shadow library that aggregates e-books from various sources.
+## Where does OpenLibeExtended-eInk-Remix get its books from?
+OpenLibeExtended-eInk-Remix downloads books from [Anna’s Archive](https://annas-archive.pm/), a shadow library that aggregates e-books from various sources.
 
 ---
 
@@ -51,8 +51,8 @@ As long as you’re just downloading for personal use and not distributing or up
 ---
 
 ## The app won’t start / crashes / has a bug!
-- Make sure you are using the latest version from [Releases](https://github.com/warreth/OpenlibExtended/releases).
-- Check for open issues at [Issues](https://github.com/warreth/OpenlibExtended/issues).
+- Make sure you are using the latest version from [Releases](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases).
+- Check for open issues at [Issues](https://github.com/warreth/OpenLibeExtended-eInk-Remix/issues).
 - If not already reported, create a new bug report using the issue template, and attach relevant logs and screenshots.
 
 ---

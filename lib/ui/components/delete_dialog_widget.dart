@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Project imports:
-import 'package:openlib/state/state.dart' show FileName, deleteFileFromMyLib;
-import 'package:openlib/ui/components/snack_bar_widget.dart';
+import 'package:openlibe_eink_remix/state/state.dart' show FileName, deleteFileFromMyLib;
+import 'package:openlibe_eink_remix/ui/components/snack_bar_widget.dart';
 
 class ShowDeleteDialog extends ConsumerWidget {
   final String id;

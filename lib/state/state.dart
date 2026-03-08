@@ -13,13 +13,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Project imports:
 // NOTE: These imports are crucial and must exist in your project structure.
-import 'package:openlib/services/annas_archieve.dart';
-import 'package:openlib/services/database.dart';
-import 'package:openlib/services/files.dart';
-import 'package:openlib/services/open_library.dart';
-import 'package:openlib/services/goodreads.dart';
-import 'package:openlib/services/instance_manager.dart';
-import 'package:openlib/services/download_manager.dart';
+import 'package:openlibe_eink_remix/services/annas_archieve.dart';
+import 'package:openlibe_eink_remix/services/database.dart';
+import 'package:openlibe_eink_remix/services/files.dart';
+import 'package:openlibe_eink_remix/services/open_library.dart';
+import 'package:openlibe_eink_remix/services/goodreads.dart';
+import 'package:openlibe_eink_remix/services/instance_manager.dart';
+import 'package:openlibe_eink_remix/services/download_manager.dart';
 // Assuming OpenLibrary, Goodreads, PenguinRandomHouse, BookDigits, and SubCategoriesTypeList are defined
 // or are simple placeholder services/models that work as intended.
 

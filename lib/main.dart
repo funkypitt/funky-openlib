@@ -9,27 +9,27 @@ import 'package:flutter/rendering.dart'; // <-- REQUIRED
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-import 'package:openlib/ui/home_page.dart';
+import 'package:openlibe_eink_remix/ui/home_page.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 
 // Project imports:
-import 'package:openlib/services/database.dart' show MyLibraryDb;
-import 'package:openlib/services/platform_utils.dart';
-import 'package:openlib/services/update_checker.dart';
-import 'package:openlib/ui/mylibrary_page.dart';
-import 'package:openlib/ui/search_page.dart';
-import 'package:openlib/ui/settings_page.dart';
-import 'package:openlib/ui/themes.dart';
-import 'package:openlib/ui/onboarding/onboarding_page.dart';
+import 'package:openlibe_eink_remix/services/database.dart' show MyLibraryDb;
+import 'package:openlibe_eink_remix/services/platform_utils.dart';
+import 'package:openlibe_eink_remix/services/update_checker.dart';
+import 'package:openlibe_eink_remix/ui/mylibrary_page.dart';
+import 'package:openlibe_eink_remix/ui/search_page.dart';
+import 'package:openlibe_eink_remix/ui/settings_page.dart';
+import 'package:openlibe_eink_remix/ui/themes.dart';
+import 'package:openlibe_eink_remix/ui/onboarding/onboarding_page.dart';
 
-import 'package:openlib/services/files.dart'
+import 'package:openlibe_eink_remix/services/files.dart'
     show moveFilesToAndroidInternalStorage;
-import 'package:openlib/services/download_manager.dart';
-import 'package:openlib/services/download_notification.dart';
-import 'package:openlib/services/instance_manager.dart';
-import 'package:openlib/services/mirror_fetcher.dart';
-import 'package:openlib/state/state.dart'
+import 'package:openlibe_eink_remix/services/download_manager.dart';
+import 'package:openlibe_eink_remix/services/download_notification.dart';
+import 'package:openlibe_eink_remix/services/instance_manager.dart';
+import 'package:openlibe_eink_remix/services/mirror_fetcher.dart';
+import 'package:openlibe_eink_remix/state/state.dart'
     show
         ThemeModeNotifier,
         selectedIndexProvider,
@@ -217,7 +217,7 @@ class MyApp extends ConsumerWidget {
         );
       },
       debugShowCheckedModeBanner: false,
-      title: 'OpenlibExtended',
+      title: 'OpenLibeExtended-eInk-Remix',
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: ref.watch(themeModeProvider),
@@ -333,7 +333,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
           ),
           content: Text(
-            'OpenlibExtended needs notification permission to show download progress in the background. This helps you track your book downloads even when the app is minimized.',
+            'OpenLibeExtended-eInk-Remix needs notification permission to show download progress in the background. This helps you track your book downloads even when the app is minimized.',
             style: TextStyle(
               fontSize: 13,
               color: Theme.of(context)
@@ -413,7 +413,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               child: AppBar(
                 toolbarHeight: kToolbarHeight,
                 backgroundColor: Theme.of(context).colorScheme.surface,
-                title: const Text("OpenlibExtended"),
+                title: const Text("OpenLibeExtended-eInk-Remix"),
                 titleTextStyle: Theme.of(context).textTheme.displayLarge,
               ),
             ),

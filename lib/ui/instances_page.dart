@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Project imports:
-import 'package:openlib/services/instance_manager.dart';
-import 'package:openlib/state/state.dart';
-import 'package:openlib/ui/components/page_title_widget.dart';
+import 'package:openlibe_eink_remix/services/instance_manager.dart';
+import 'package:openlibe_eink_remix/state/state.dart';
+import 'package:openlibe_eink_remix/ui/components/page_title_widget.dart';
 
 class InstancesPage extends ConsumerStatefulWidget {
   const InstancesPage({super.key});

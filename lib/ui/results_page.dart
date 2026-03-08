@@ -6,12 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 // Project imports:
-import 'package:openlib/state/state.dart' as app_state;
-import 'package:openlib/ui/book_info_page.dart';
-import 'package:openlib/ui/components/book_card_widget.dart';
-import 'package:openlib/ui/components/error_widget.dart';
+import 'package:openlibe_eink_remix/state/state.dart' as app_state;
+import 'package:openlibe_eink_remix/ui/book_info_page.dart';
+import 'package:openlibe_eink_remix/ui/components/book_card_widget.dart';
+import 'package:openlibe_eink_remix/ui/components/error_widget.dart';
 // NOTE: Assuming the class INSIDE this file is named TitleText.
-import 'package:openlib/ui/components/page_title_widget.dart'; 
+import 'package:openlibe_eink_remix/ui/components/page_title_widget.dart'; 
 
 // A constant for the 'No Results Found' text color for better theming/readability.
 const Color _kNoResultsTextColor = Color(0xFF4D4D4D);

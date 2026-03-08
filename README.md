@@ -2,19 +2,19 @@
 
 <img src="assets/icons/appIcon.png" width="150">
 
-# OpenlibExtended
+# OpenLibeExtended-eInk-Remix
 
 **The ultimate open-source cross-platform client for Anna's Archive. <br/> Download, organize, and read your favorite books on any device.**
 > Fork from [openlib](https://github.com/dstark5/Openlib) with more features and desktop support!
 
 [![made-with-flutter](https://img.shields.io/badge/Made%20with-Flutter-4361ee.svg?style=for-the-badge)](https://flutter.dev/)
 [![AGPLv3 License](https://img.shields.io/badge/License-AGPL%20v3-e63946.svg?style=for-the-badge)](https://opensource.org/licenses/)
-[![Latest release](https://img.shields.io/github/release/warreth/OpenlibExtended.svg?style=for-the-badge)](https://github.com/warreth/OpenlibExtended/releases)
-[![Downloads](https://img.shields.io/github/downloads/warreth/OpenlibExtended/total.svg?style=for-the-badge)](https://github.com/warreth/OpenlibExtended/releases)
+[![Latest release](https://img.shields.io/github/release/warreth/OpenLibeExtended-eInk-Remix.svg?style=for-the-badge)](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases)
+[![Downloads](https://img.shields.io/github/downloads/warreth/OpenLibeExtended-eInk-Remix/total.svg?style=for-the-badge)](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases)
 
 [<img src="github_releases.png"
      alt="Get it on GitHub"
-     height="110">](https://github.com/warreth/OpenlibExtended/releases)
+     height="110">](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases)
 
 **[📖 Frequently Asked Questions (FAQ)](./FAQ.md)**
 </div>
@@ -38,11 +38,11 @@
 
 ## Star History ⭐️
 
-[![Star History Chart](https://api.star-history.com/svg?repos=warreth/OpenlibExtended&type=Date)](https://star-history.com/#warreth/OpenlibExtended&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=warreth/OpenLibeExtended-eInk-Remix&type=Date)](https://star-history.com/#warreth/OpenLibeExtended-eInk-Remix&Date)
 
 ## Roadmap 🎯
 
-- [ ] **Web Version**: Run OpenlibExtended directly in your browser.
+- [ ] **Web Version**: Run OpenLibeExtended-eInk-Remix directly in your browser.
 - [ ] **Cloud Sync**: Sync your library and reading progress with Booklore.
 - [ ] **Enhanced Formats**: Native support for CBR, CBZ, and AZW3.
 - [ ] **Metadata Editor**: Fix and organize book details manually.
@@ -58,14 +58,14 @@
 
 ## Installation 📦
 
-Grab the latest release from [GitHub Releases](https://github.com/warreth/OpenlibExtended/releases).
+Grab the latest release from [GitHub Releases](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases).
 
 **Note:** Publishing this app to the Play Store violates their terms.
 
 ## Development 🛠️
 
 ```bash
-git clone https://github.com/warreth/OpenlibExtended.git
+git clone https://github.com/warreth/OpenLibeExtended-eInk-Remix.git
 flutter pub get
 flutter run
 ```
@@ -85,4 +85,4 @@ Licensed under [AGPL v3.0](https://www.gnu.org/licenses/agpl-3.0.html).
 
 ## Disclaimer ⚠️
 
-OpenlibExtended does not own or have any affiliation with the books available through the app. All books are the property of their respective owners and are protected by copyright law. OpenlibExtended is not responsible for any infringement of copyright or other intellectual property rights that may result from the use of the books available through the app. By using the app, you agree to use the books only for personal, non-commercial purposes and in compliance with all applicable laws and regulations.
+OpenLibeExtended-eInk-Remix does not own or have any affiliation with the books available through the app. All books are the property of their respective owners and are protected by copyright law. OpenLibeExtended-eInk-Remix is not responsible for any infringement of copyright or other intellectual property rights that may result from the use of the books available through the app. By using the app, you agree to use the books only for personal, non-commercial purposes and in compliance with all applicable laws and regulations.

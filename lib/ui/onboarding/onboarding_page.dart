@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openlib/main.dart' show MainScreen;
-import 'package:openlib/services/database.dart';
-import 'package:openlib/services/files.dart';
-import 'package:openlib/state/state.dart';
-import 'package:openlib/ui/settings_page.dart' show scanAndImportBooks;
+import 'package:openlibe_eink_remix/main.dart' show MainScreen;
+import 'package:openlibe_eink_remix/services/database.dart';
+import 'package:openlibe_eink_remix/services/files.dart';
+import 'package:openlibe_eink_remix/state/state.dart';
+import 'package:openlibe_eink_remix/ui/settings_page.dart' show scanAndImportBooks;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -221,7 +221,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               size: 80, color: Theme.of(context).colorScheme.secondary),
           const SizedBox(height: 30),
           Text(
-            "Welcome to OpenlibExtended",
+            "Welcome to OpenLibeExtended-eInk-Remix",
             style: Theme.of(context).textTheme.displayLarge,
             textAlign: TextAlign.center,
           ),

@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:html/parser.dart' show parse;
 
 // Project imports:
-import 'package:openlib/services/logger.dart';
+import 'package:openlibe_eink_remix/services/logger.dart';
 
 class TrendingBookData {
   final String? title;

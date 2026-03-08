@@ -9,8 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 
 // Project imports:
-import 'package:openlib/services/network_error.dart';
-import 'package:openlib/services/logger.dart';
+import 'package:openlibe_eink_remix/services/network_error.dart';
+import 'package:openlibe_eink_remix/services/logger.dart';
 
 class CustomErrorWidget extends StatelessWidget {
   final Object error;

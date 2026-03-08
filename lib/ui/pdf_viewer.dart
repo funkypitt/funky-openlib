@@ -8,11 +8,11 @@ import 'package:open_file/open_file.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
-import 'package:openlib/services/files.dart' show getFilePath;
-import 'package:openlib/services/platform_utils.dart';
-import 'package:openlib/ui/components/snack_bar_widget.dart';
+import 'package:openlibe_eink_remix/services/files.dart' show getFilePath;
+import 'package:openlibe_eink_remix/services/platform_utils.dart';
+import 'package:openlibe_eink_remix/ui/components/snack_bar_widget.dart';
 
-import 'package:openlib/state/state.dart'
+import 'package:openlibe_eink_remix/state/state.dart'
     show
         filePathProvider,
         pdfCurrentPage,
@@ -67,7 +67,7 @@ class _PdfViewState extends ConsumerState<PdfView> {
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.primary,
-          title: const Text("OpenlibExtended"),
+          title: const Text("OpenLibeExtended-eInk-Remix"),
           titleTextStyle: Theme.of(context).textTheme.displayLarge,
         ),
         body: Center(child: Text(error.toString())),
@@ -76,7 +76,7 @@ class _PdfViewState extends ConsumerState<PdfView> {
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.primary,
-          title: const Text("OpenlibExtended"),
+          title: const Text("OpenLibeExtended-eInk-Remix"),
           titleTextStyle: Theme.of(context).textTheme.displayLarge,
         ),
         body: Center(
@@ -173,7 +173,7 @@ class _PdfViewerState extends ConsumerState<PdfViewer> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.primary,
-        title: const Text("OpenlibExtended"),
+        title: const Text("OpenLibeExtended-eInk-Remix"),
         titleTextStyle: Theme.of(context).textTheme.displayLarge,
         actions: !useExternalViewer
             ? [

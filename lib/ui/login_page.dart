@@ -9,12 +9,12 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Project imports:
-import 'package:openlib/services/database.dart';
-import 'package:openlib/services/download_manager.dart';
-import 'package:openlib/services/instance_manager.dart';
-import 'package:openlib/services/logger.dart';
-import 'package:openlib/services/mirror_fetcher.dart';
-import 'package:openlib/state/state.dart' show cookieProvider;
+import 'package:openlibe_eink_remix/services/database.dart';
+import 'package:openlibe_eink_remix/services/download_manager.dart';
+import 'package:openlibe_eink_remix/services/instance_manager.dart';
+import 'package:openlibe_eink_remix/services/logger.dart';
+import 'package:openlibe_eink_remix/services/mirror_fetcher.dart';
+import 'package:openlibe_eink_remix/state/state.dart' show cookieProvider;
 
 /// Login page that opens Anna's Archive /account in a WebView.
 /// After the user logs in, cookies are extracted and persisted.

@@ -9,7 +9,7 @@ import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:openlib/services/platform_utils.dart';
+import 'package:openlibe_eink_remix/services/platform_utils.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -234,7 +234,7 @@ class AppLogger {
     buffer.writeln(
         '╔═══════════════════════════════════════════════════════════════╗');
     buffer.writeln(
-        '║              OpenlibExtended App Diagnostic Logs             ║');
+        '║              OpenLibeExtended-eInk-Remix App Diagnostic Logs             ║');
     buffer.writeln(
         '╚═══════════════════════════════════════════════════════════════╝');
     buffer.writeln('');
@@ -281,7 +281,7 @@ class AppLogger {
           .toIso8601String()
           .replaceAll(':', '-')
           .replaceAll('.', '-');
-      final fileName = 'openlib_logs_$timestamp.txt';
+      final fileName = 'openlibe_eink_remix_logs_$timestamp.txt';
 
       if (PlatformUtils.isDesktop) {
         final outputFile = await FilePicker.platform.saveFile(
@@ -307,9 +307,9 @@ class AppLogger {
         // Share the file
         await Share.shareXFiles(
           [XFile(file.path)],
-          subject: 'OpenlibExtended App Logs - $timestamp',
+          subject: 'OpenLibeExtended-eInk-Remix App Logs - $timestamp',
           text:
-              'OpenlibExtended app logs for the past ${_logRetentionDuration.inMinutes} minutes',
+              'OpenLibeExtended-eInk-Remix app logs for the past ${_logRetentionDuration.inMinutes} minutes',
         );
       }
 

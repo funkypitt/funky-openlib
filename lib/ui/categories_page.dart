@@ -6,11 +6,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Project imports:
-import 'package:openlib/ui/components/page_title_widget.dart';
-import 'package:openlib/ui/extensions.dart';
-import 'package:openlib/ui/results_page.dart';
-import 'package:openlib/ui/components/error_widget.dart';
-import 'package:openlib/state/state.dart'
+import 'package:openlibe_eink_remix/ui/components/page_title_widget.dart';
+import 'package:openlibe_eink_remix/ui/extensions.dart';
+import 'package:openlibe_eink_remix/ui/results_page.dart';
+import 'package:openlibe_eink_remix/ui/components/error_widget.dart';
+import 'package:openlibe_eink_remix/state/state.dart'
     show getSubCategoryTypeList, enableFiltersState;
 
 class CategoryBook {
@@ -388,7 +388,7 @@ class CategoryListingPage extends ConsumerWidget {
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.surface,
-          title: const Text("OpenlibExtended"),
+          title: const Text("OpenLibeExtended-eInk-Remix"),
           titleTextStyle: Theme.of(context).textTheme.displayLarge,
         ),
         body: booksBasedOnGenre.when(

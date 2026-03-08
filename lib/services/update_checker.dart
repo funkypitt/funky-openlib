@@ -19,8 +19,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
-import 'package:openlib/services/database.dart';
-import 'package:openlib/services/logger.dart';
+import 'package:openlibe_eink_remix/services/database.dart';
+import 'package:openlibe_eink_remix/services/logger.dart';
 
 // Release information from GitHub
 class ReleaseInfo {
@@ -138,7 +138,7 @@ class UpdateCheckerService {
 
   // GitHub repository information - update these for your repo
   static const String _owner = "warreth";
-  static const String _repo = "OpenlibExtended";
+  static const String _repo = "OpenLibeExtended-eInk-Remix";
   static const String _apiUrl = "https://api.github.com/repos";
 
   // Check for updates
@@ -215,7 +215,7 @@ class UpdateCheckerService {
 
     final response = await http.get(url, headers: {
       "Accept": "application/vnd.github.v3+json",
-      "User-Agent": "OpenlibExtended-App",
+      "User-Agent": "OpenLibeExtended-eInk-Remix-App",
     });
 
     if (response.statusCode != 200) {
@@ -351,7 +351,7 @@ class UpdateCheckerService {
             ],
           ),
           content: const Text(
-            "To install app updates, OpenlibExtended needs permission to install packages.\n\n"
+            "To install app updates, OpenLibeExtended-eInk-Remix needs permission to install packages.\n\n"
             "This allows the app to automatically install new versions with bug fixes and new features.\n\n"
             "You will be taken to Settings to enable this permission.",
           ),
@@ -407,7 +407,7 @@ class UpdateCheckerService {
       final dio = Dio();
       final downloadsDir = await _getDownloadsDirectory();
       final fileExtension = _getFileExtension();
-      final tempFileName = "openlib_update_temp.$fileExtension";
+      final tempFileName = "openlibe_eink_remix_update_temp.$fileExtension";
       final tempFilePath = "${downloadsDir.path}/$tempFileName";
 
       _logger.info("Starting update download", tag: "UpdateChecker", metadata: {
@@ -427,7 +427,7 @@ class UpdateCheckerService {
         cancelToken: cancelToken,
         options: Options(
           headers: {
-            "User-Agent": "OpenlibExtended-App",
+            "User-Agent": "OpenLibeExtended-eInk-Remix-App",
           },
         ),
         onReceiveProgress: (received, total) {
@@ -446,10 +446,10 @@ class UpdateCheckerService {
       if (Platform.isWindows) {
         // Use the directory of the running executable
         installDirPath = File(Platform.resolvedExecutable).parent.path;
-        targetFileName = "openlib.exe";
+        targetFileName = "openlibe_eink_remix.exe";
       } else if (Platform.isLinux) {
         installDirPath = File(Platform.resolvedExecutable).parent.path;
-        targetFileName = "openlib.AppImage";
+        targetFileName = "openlibe_eink_remix.AppImage";
       } else {
         // For other platforms, just return the temp file path
         if (Platform.isMacOS || Platform.isIOS || Platform.isAndroid) {
@@ -471,10 +471,10 @@ class UpdateCheckerService {
         if (f is File) {
           final name = f.path.split(Platform.pathSeparator).last;
           if ((Platform.isWindows &&
-                  name.startsWith("openlib_") &&
+                  name.startsWith("openlibe_eink_remix_") &&
                   name.endsWith(".exe")) ||
               (Platform.isLinux &&
-                  name.startsWith("openlib_") &&
+                  name.startsWith("openlibe_eink_remix_") &&
                   name.endsWith(".AppImage"))) {
             try {
               await f.delete();
@@ -567,7 +567,7 @@ class UpdateCheckerService {
       // Always use the non-versioned filename in the install dir
       String installDirPath = File(Platform.resolvedExecutable).parent.path;
       String targetFileName =
-          Platform.isWindows ? "openlib.exe" : "openlib.AppImage";
+          Platform.isWindows ? "openlibe_eink_remix.exe" : "openlibe_eink_remix.AppImage";
       String targetFilePath = "$installDirPath/$targetFileName";
       // Launch the new executable
       await Process.start(targetFilePath, [], mode: ProcessStartMode.detached);

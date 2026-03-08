@@ -6,9 +6,9 @@ import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 
 // Project imports:
-import 'package:openlib/services/database.dart' show MyLibraryDb;
-import 'package:openlib/services/files.dart' show generateBookFileName;
-import 'package:openlib/services/logger.dart';
+import 'package:openlibe_eink_remix/services/database.dart' show MyLibraryDb;
+import 'package:openlibe_eink_remix/services/files.dart' show generateBookFileName;
+import 'package:openlibe_eink_remix/services/logger.dart';
 
 MyLibraryDb dataBase = MyLibraryDb.instance;
 final AppLogger _logger = AppLogger();

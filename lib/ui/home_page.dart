@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openlib/state/state.dart';
-import 'package:openlib/ui/categories_page.dart';
-import 'package:openlib/ui/components/active_downloads_widget.dart';
-import 'package:openlib/ui/components/page_title_widget.dart';
-import 'package:openlib/ui/trending_page.dart';
+import 'package:openlibe_eink_remix/state/state.dart';
+import 'package:openlibe_eink_remix/ui/categories_page.dart';
+import 'package:openlibe_eink_remix/ui/components/active_downloads_widget.dart';
+import 'package:openlibe_eink_remix/ui/components/page_title_widget.dart';
+import 'package:openlibe_eink_remix/ui/trending_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});

@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 
 // Project imports:
-import 'package:openlib/services/logger.dart';
+import 'package:openlibe_eink_remix/services/logger.dart';
 
 // Enum for categorized network error types
 enum NetworkErrorType {

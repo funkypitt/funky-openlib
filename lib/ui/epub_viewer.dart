@@ -10,9 +10,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_file/open_file.dart';
 
 // Project imports:
-import 'package:openlib/services/files.dart' show getFilePath;
-import 'package:openlib/ui/components/snack_bar_widget.dart';
-import 'package:openlib/state/state.dart'
+import 'package:openlibe_eink_remix/services/files.dart' show getFilePath;
+import 'package:openlibe_eink_remix/ui/components/snack_bar_widget.dart';
+import 'package:openlibe_eink_remix/state/state.dart'
     show
         filePathProvider,
         saveEpubState,
@@ -20,10 +20,10 @@ import 'package:openlib/state/state.dart'
         openEpubWithExternalAppProvider,
         epubViewModeProvider,
         epubReaderFontSizeProvider;
-import 'package:openlib/services/database.dart' show MyLibraryDb;
-import 'package:openlib/services/platform_utils.dart';
-import 'package:openlib/ui/components/reader_help_overlay.dart';
-import 'package:openlib/ui/epub_page_viewer.dart';
+import 'package:openlibe_eink_remix/services/database.dart' show MyLibraryDb;
+import 'package:openlibe_eink_remix/services/platform_utils.dart';
+import 'package:openlibe_eink_remix/ui/components/reader_help_overlay.dart';
+import 'package:openlibe_eink_remix/ui/epub_page_viewer.dart';
 
 Future<void> launchEpubViewer({
   required String fileName,
@@ -88,7 +88,7 @@ class _EpubViewState extends ConsumerState<EpubViewerWidget> {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Theme.of(context).colorScheme.primary,
-            title: const Text("OpenlibExtended"),
+            title: const Text("OpenLibeExtended-eInk-Remix"),
             titleTextStyle: Theme.of(context).textTheme.displayLarge,
           ),
           body: Center(child: Text(error.toString())),
@@ -98,7 +98,7 @@ class _EpubViewState extends ConsumerState<EpubViewerWidget> {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Theme.of(context).colorScheme.primary,
-            title: const Text("OpenlibExtended"),
+            title: const Text("OpenLibeExtended-eInk-Remix"),
             titleTextStyle: Theme.of(context).textTheme.displayLarge,
           ),
           body: Center(
@@ -199,7 +199,7 @@ class _EpubScrollViewerState extends ConsumerState<EpubScrollViewer> {
         backgroundColor: isDarkMode
             ? Theme.of(context).colorScheme.surface
             : Theme.of(context).colorScheme.primary,
-        title: const Text("OpenlibExtended"),
+        title: const Text("OpenLibeExtended-eInk-Remix"),
         titleTextStyle: Theme.of(context).textTheme.displayLarge,
         leading: IconButton(
           icon: Icon(Icons.arrow_back,

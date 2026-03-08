@@ -6,15 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async'; // For Timer/Debounce
 
 // Project imports:
-import 'package:openlib/services/database.dart';
-import 'package:openlib/ui/components/active_downloads_widget.dart';
-import 'package:openlib/ui/components/page_title_widget.dart';
-import 'package:openlib/ui/results_page.dart';
+import 'package:openlibe_eink_remix/services/database.dart';
+import 'package:openlibe_eink_remix/ui/components/active_downloads_widget.dart';
+import 'package:openlibe_eink_remix/ui/components/page_title_widget.dart';
+import 'package:openlibe_eink_remix/ui/results_page.dart';
 import 'components/snack_bar_widget.dart';
 // Import the new API Service (adjust path as necessary)
-import 'package:openlib/services/google_suggest_api.dart';
+import 'package:openlibe_eink_remix/services/google_suggest_api.dart';
 
-import 'package:openlib/state/state.dart'
+import 'package:openlibe_eink_remix/state/state.dart'
     show
         searchQueryProvider,
         selectedTypeState,

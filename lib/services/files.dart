@@ -6,8 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 // Project imports:
-import 'package:openlib/services/database.dart';
-import 'package:openlib/state/state.dart' show myLibraryProvider;
+import 'package:openlibe_eink_remix/services/database.dart';
+import 'package:openlibe_eink_remix/state/state.dart' show myLibraryProvider;
 
 MyLibraryDb dataBase = MyLibraryDb.instance;
 

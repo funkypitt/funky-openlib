@@ -6,9 +6,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Project imports:
-import 'package:openlib/state/state.dart'
+import 'package:openlibe_eink_remix/state/state.dart'
     show checkIdExists, languageCodeToDisplay;
-import 'package:openlib/ui/extensions.dart';
+import 'package:openlibe_eink_remix/ui/extensions.dart';
 
 // Extract file type from book info string
 String? getFileType(String? info) {

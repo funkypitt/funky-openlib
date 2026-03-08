@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d2d2d"/>
+      <stop offset="100%" style="stop-color:#1a1a1a"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e8e4d9"/>
+      <stop offset="100%" style="stop-color:#d4d0c5"/>
+    </linearGradient>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#bg)"/>
+  <!-- eInk device body -->
+  <rect x="140" y="80" width="232" height="352" rx="18" ry="18" fill="#3a3a3a" stroke="#555" stroke-width="2"/>
+  <!-- eInk screen (warm paper tone) -->
+  <rect x="160" y="100" width="192" height="280" rx="4" ry="4" fill="url(#screen)"/>
+  <!-- Text lines on eInk screen -->
+  <rect x="180" y="130" width="152" height="4" rx="2" fill="#555"/>
+  <rect x="180" y="148" width="140" height="4" rx="2" fill="#666"/>
+  <rect x="180" y="166" width="152" height="4" rx="2" fill="#555"/>
+  <rect x="180" y="184" width="120" height="4" rx="2" fill="#666"/>
+  <rect x="180" y="202" width="148" height="4" rx="2" fill="#555"/>
+  <rect x="180" y="220" width="136" height="4" rx="2" fill="#666"/>
+  <rect x="180" y="238" width="152" height="4" rx="2" fill="#555"/>
+  <rect x="180" y="256" width="100" height="4" rx="2" fill="#666"/>
+  <!-- Page turn arrow (right side) -->
+  <path d="M310 310 L340 330 L310 350" fill="none" stroke="#888" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Open book icon at top -->
+  <g transform="translate(220, 108)">
+    <path d="M36 4 C36 4 20 0 4 8 L4 44 C20 36 36 40 36 40 C36 40 52 36 68 44 L68 8 C52 0 36 4 36 4 Z" fill="none" stroke="#444" stroke-width="2.5"/>
+    <line x1="36" y1="4" x2="36" y2="40" stroke="#444" stroke-width="1.5"/>
+  </g>
+  <!-- Home button -->
+  <circle cx="256" cy="404" r="14" fill="none" stroke="#555" stroke-width="2"/>
+  <!-- "eInk" label -->
+  <text x="256" y="460" text-anchor="middle" font-family="monospace" font-size="22" font-weight="bold" fill="#e8e4d9" letter-spacing="4">eInk</text>
+</svg>

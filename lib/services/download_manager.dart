@@ -7,11 +7,11 @@ import 'package:dio/dio.dart';
 import 'package:crypto/crypto.dart';
 
 // Project imports:
-import 'package:openlib/services/database.dart' show MyLibraryDb, MyBook;
-import 'package:openlib/services/download_notification.dart';
-import 'package:openlib/services/files.dart' show generateBookFileName;
-import 'package:openlib/services/logger.dart';
-import 'package:openlib/services/mirror_fetcher.dart';
+import 'package:openlibe_eink_remix/services/database.dart' show MyLibraryDb, MyBook;
+import 'package:openlibe_eink_remix/services/download_notification.dart';
+import 'package:openlibe_eink_remix/services/files.dart' show generateBookFileName;
+import 'package:openlibe_eink_remix/services/logger.dart';
+import 'package:openlibe_eink_remix/services/mirror_fetcher.dart';
 
 enum DownloadStatus {
   queued,

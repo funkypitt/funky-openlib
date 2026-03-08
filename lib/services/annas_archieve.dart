@@ -8,9 +8,9 @@ import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart' as dom;
 
 // Project imports:
-import 'package:openlib/services/instance_manager.dart';
-import 'package:openlib/services/logger.dart';
-import 'package:openlib/services/network_error.dart';
+import 'package:openlibe_eink_remix/services/instance_manager.dart';
+import 'package:openlibe_eink_remix/services/logger.dart';
+import 'package:openlibe_eink_remix/services/network_error.dart';
 
 // ====================================================================
 // DATA MODELS

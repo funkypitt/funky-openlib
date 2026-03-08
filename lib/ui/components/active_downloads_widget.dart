@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Project imports:
-import 'package:openlib/services/download_manager.dart';
-import 'package:openlib/state/state.dart';
-import 'package:openlib/ui/webview_page.dart';
+import 'package:openlibe_eink_remix/services/download_manager.dart';
+import 'package:openlibe_eink_remix/state/state.dart';
+import 'package:openlibe_eink_remix/ui/webview_page.dart';
 
 class ActiveDownloadsWidget extends ConsumerWidget {
   const ActiveDownloadsWidget({super.key});

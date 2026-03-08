@@ -6,11 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_file/open_file.dart';
 
 // Project imports:
-import 'package:openlib/services/files.dart' show getFilePath;
-import 'package:openlib/ui/components/delete_dialog_widget.dart';
-import 'package:openlib/ui/components/snack_bar_widget.dart';
-import 'package:openlib/ui/epub_viewer.dart' show launchEpubViewer;
-import 'package:openlib/ui/pdf_viewer.dart' show launchPdfViewer;
+import 'package:openlibe_eink_remix/services/files.dart' show getFilePath;
+import 'package:openlibe_eink_remix/ui/components/delete_dialog_widget.dart';
+import 'package:openlibe_eink_remix/ui/components/snack_bar_widget.dart';
+import 'package:openlibe_eink_remix/ui/epub_viewer.dart' show launchEpubViewer;
+import 'package:openlibe_eink_remix/ui/pdf_viewer.dart' show launchPdfViewer;
 
 class FileOpenAndDeleteButtons extends ConsumerWidget {
   final String id;

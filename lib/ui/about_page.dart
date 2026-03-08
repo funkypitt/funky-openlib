@@ -7,8 +7,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:yaml/yaml.dart';
 
 // Project imports:
-import 'package:openlib/ui/components/page_title_widget.dart';
-import 'package:openlib/ui/components/snack_bar_widget.dart';
+import 'package:openlibe_eink_remix/ui/components/page_title_widget.dart';
+import 'package:openlibe_eink_remix/ui/components/snack_bar_widget.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
@@ -46,7 +46,7 @@ class _AboutPageState extends State<AboutPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        title: const Text("OpenlibExtended"),
+        title: const Text("OpenLibeExtended-eInk-Remix"),
         titleTextStyle: Theme.of(context).textTheme.displayLarge,
       ),
       body: SingleChildScrollView(
@@ -112,10 +112,10 @@ class _AboutPageState extends State<AboutPage> {
               ),
               const _UrlText(
                   text: 'This Fork (by warreth)',
-                  url: 'https://github.com/warreth/OpenlibExtended'),
+                  url: 'https://github.com/warreth/OpenLibeExtended-eInk-Remix'),
               const _UrlText(
                   text: 'Report An Issue',
-                  url: 'https://github.com/warreth/OpenlibExtended/issues'),
+                  url: 'https://github.com/warreth/OpenLibeExtended-eInk-Remix/issues'),
               const _UrlText(
                   text: 'Original Project (by dstark5)',
                   url: 'https://github.com/dstark5/Openlib'),

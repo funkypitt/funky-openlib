@@ -1,5 +1,5 @@
 name: "Bug Report"
-description: "Report a problem with OpenlibExtended"
+description: "Report a problem with OpenLibeExtended-eInk-Remix"
 title: "[Bug] <Short summary of the problem>"
 labels: ["bug"]
 body:
@@ -34,7 +34,7 @@ body:
     attributes:
       label: Are you using the latest version?
       options:
-        - label: "I am using the latest version of OpenlibExtended."
+        - label: "I am using the latest version of OpenLibeExtended-eInk-Remix."
           required: true
   - type: textarea
     id: describe_problem

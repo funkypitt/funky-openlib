@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Project imports:
-import 'package:openlib/services/database.dart';
-import 'package:openlib/services/share_book.dart';
-import 'package:openlib/ui/components/book_info_widget.dart';
-import 'package:openlib/ui/components/file_buttons_widget.dart';
+import 'package:openlibe_eink_remix/services/database.dart';
+import 'package:openlibe_eink_remix/services/share_book.dart';
+import 'package:openlibe_eink_remix/ui/components/book_info_widget.dart';
+import 'package:openlibe_eink_remix/ui/components/file_buttons_widget.dart';
 
 class BookPage extends StatelessWidget {
   const BookPage({super.key, required this.id});
@@ -23,7 +23,7 @@ class BookPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        title: const Text("OpenlibExtended"),
+        title: const Text("OpenLibeExtended-eInk-Remix"),
         titleTextStyle: Theme.of(context).textTheme.displayLarge,
         actions: [
           FutureBuilder(

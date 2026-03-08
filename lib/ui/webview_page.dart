@@ -13,8 +13,8 @@ import 'package:desktop_webview_window/desktop_webview_window.dart'
 import 'package:path_provider/path_provider.dart';
 
 // Project imports:
-import 'package:openlib/services/platform_utils.dart';
-import 'package:openlib/services/logger.dart';
+import 'package:openlibe_eink_remix/services/platform_utils.dart';
+import 'package:openlibe_eink_remix/services/logger.dart';
 
 class Webview extends ConsumerStatefulWidget {
   const Webview({
@@ -104,7 +104,7 @@ class _WebviewState extends ConsumerState<Webview> {
         configuration: desktop_webview.CreateConfiguration(
           windowHeight: 720,
           windowWidth: 1280,
-          title: "Verify Access - OpenLibExtended",
+          title: "Verify Access - OpenLibeExtended-eInk-Remix",
           userDataFolderWindows: webviewDataDir.path,
         ),
       );

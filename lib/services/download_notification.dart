@@ -9,7 +9,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 // Project imports:
-import 'package:openlib/services/platform_utils.dart';
+import 'package:openlibe_eink_remix/services/platform_utils.dart';
 
 class DownloadNotificationService {
   static final DownloadNotificationService _instance =

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:openlib/services/instance_manager.dart';
+import 'package:openlibe_eink_remix/services/instance_manager.dart';
 
 class BookInfoWidget extends StatelessWidget {
   /// Returns the current fastest Anna's Archive domain for the given md5.

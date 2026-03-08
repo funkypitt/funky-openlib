@@ -6,8 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:openlib/services/epub_assets.dart';
-import 'package:openlib/state/state.dart'
+import 'package:openlibe_eink_remix/services/epub_assets.dart';
+import 'package:openlibe_eink_remix/state/state.dart'
     show
         saveEpubState,
         getBookPosition,
@@ -137,7 +137,7 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
         backgroundColor: isDarkMode
             ? Theme.of(context).colorScheme.surface
             : Theme.of(context).colorScheme.primary,
-        title: const Text("OpenlibExtended"),
+        title: const Text("OpenLibeExtended-eInk-Remix"),
         titleTextStyle: Theme.of(context).textTheme.displayLarge,
         leading: IconButton(
           icon: Icon(Icons.arrow_back,
