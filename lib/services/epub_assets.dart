@@ -16,7 +16,7 @@ class EpubAssetsService {
   static String? _cachedDir;
 
   /// Returns the directory path where epub.js assets are stored.
-  /// Copies assets on first call or if files are missing.
+  /// Always overwrites reader.html to pick up changes between app updates.
   static Future<String> ensureAssets() async {
     if (_cachedDir != null) {
       final dir = Directory(_cachedDir!);
@@ -34,7 +34,11 @@ class EpubAssetsService {
       final fileName = p.basename(assetPath);
       final targetFile = File(p.join(epubjsDir.path, fileName));
 
-      if (!await targetFile.exists()) {
+      // Always overwrite reader.html (it changes between versions).
+      // Only copy JS libs if missing (they're large and stable).
+      final alwaysOverwrite = fileName == 'reader.html';
+
+      if (alwaysOverwrite || !await targetFile.exists()) {
         final data = await rootBundle.load(assetPath);
         await targetFile.writeAsBytes(
           data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),

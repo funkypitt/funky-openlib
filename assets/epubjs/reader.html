@@ -27,6 +27,24 @@
     font-family: sans-serif;
     font-size: 16px;
     color: #888;
+    z-index: 5;
+  }
+  /* Transparent tap zones overlaid on top of everything */
+  .tap-zone {
+    position: fixed;
+    top: 0;
+    height: 100%;
+    z-index: 20;
+    /* fully transparent, no visual effect */
+    background: transparent;
+  }
+  #tap-prev {
+    left: 0;
+    width: 30%;
+  }
+  #tap-next {
+    right: 0;
+    width: 30%;
   }
 </style>
 <script src="jszip.min.js"></script>
@@ -35,10 +53,36 @@
 <body>
 <div id="viewer"></div>
 <div id="loading">Loading...</div>
+<div id="tap-prev" class="tap-zone"></div>
+<div id="tap-next" class="tap-zone"></div>
 <script>
 var book = null;
 var rendition = null;
 var currentCfi = null;
+var isNavigating = false;
+
+// Tap zone event listeners — these sit on top of the epub iframe
+// so they always receive taps reliably
+document.getElementById("tap-prev").addEventListener("click", function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  goPrev();
+});
+document.getElementById("tap-next").addEventListener("click", function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  goNext();
+});
+
+// Also handle touch events for mobile responsiveness
+document.getElementById("tap-prev").addEventListener("touchend", function(e) {
+  e.preventDefault();
+  goPrev();
+});
+document.getElementById("tap-next").addEventListener("touchend", function(e) {
+  e.preventDefault();
+  goNext();
+});
 
 function loadBook(base64Data) {
   try {
@@ -60,10 +104,25 @@ function loadBook(base64Data) {
 
     rendition.on("relocated", function(location) {
       currentCfi = location.start.cfi;
+      isNavigating = false;
       var progress = book.locations ? (location.start.percentage || 0) : 0;
       try {
         window.flutter_inappwebview.callHandler("onRelocated", currentCfi, progress);
       } catch(e) {}
+    });
+
+    // Also hook into iframe content to handle taps in the middle 40% area
+    // (the tap zones only cover left 30% and right 30%)
+    rendition.hooks.content.register(function(contents) {
+      contents.document.addEventListener("click", function(e) {
+        var iframeWidth = contents.document.documentElement.clientWidth;
+        var x = e.clientX;
+        if (x < iframeWidth * 0.3) {
+          goPrev();
+        } else if (x > iframeWidth * 0.7) {
+          goNext();
+        }
+      });
     });
 
     book.ready.then(function() {
@@ -95,43 +154,32 @@ function loadBook(base64Data) {
       });
     });
 
-    // Handle taps inside the epub iframe content for page turning
-    rendition.on("displayed", function(section) {
-      try {
-        var iframeDoc = rendition.getContents()[0];
-        if (iframeDoc && iframeDoc.document) {
-          iframeDoc.document.addEventListener("click", handleTap);
-        }
-      } catch(e) {}
-    });
-
     rendition.display();
   } catch(e) {
     document.getElementById("loading").textContent = "Error: " + e.message;
   }
 }
 
-// Handle tap on the outer document as well
-document.addEventListener("click", handleTap);
-
-function handleTap(e) {
-  if (!rendition) return;
-  var w = window.innerWidth;
-  var x = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : -1);
-  if (x < 0) return;
-  if (x < w * 0.3) {
-    rendition.prev();
-  } else if (x > w * 0.7) {
-    rendition.next();
+function goNext() {
+  if (rendition && !isNavigating) {
+    isNavigating = true;
+    rendition.next().then(function() {
+      isNavigating = false;
+    }).catch(function() {
+      isNavigating = false;
+    });
   }
 }
 
-function goNext() {
-  if (rendition) rendition.next();
-}
-
 function goPrev() {
-  if (rendition) rendition.prev();
+  if (rendition && !isNavigating) {
+    isNavigating = true;
+    rendition.prev().then(function() {
+      isNavigating = false;
+    }).catch(function() {
+      isNavigating = false;
+    });
+  }
 }
 
 function goToCfi(cfi) {
