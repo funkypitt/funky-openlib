@@ -137,7 +137,7 @@ class UpdateCheckerService {
   final MyLibraryDb _database = MyLibraryDb.instance;
 
   // GitHub repository information - update these for your repo
-  static const String _owner = "warreth";
+  static const String _owner = "funkypitt";
   static const String _repo = "OpenLibeExtended-eInk-Remix";
   static const String _apiUrl = "https://api.github.com/repos";
 

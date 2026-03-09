@@ -399,7 +399,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           const SizedBox(height: 20),
           ElevatedButton.icon(
             onPressed: () =>
-                launchUrl(Uri.parse('https://github.com/sponsors/warreth')),
+                launchUrl(Uri.parse('https://github.com/sponsors/funkypitt')),
             icon: const Icon(Icons.open_in_new),
             label: const Text("Sponsor on GitHub"),
           ),

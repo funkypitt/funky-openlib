@@ -7,20 +7,20 @@ OpenLibeExtended-eInk-Remix is an open source app for downloading and reading bo
 
 ## How do I install OpenLibeExtended-eInk-Remix?
 **Android:**  
-- Download the latest APK from [Releases](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases).
+- Download the latest APK from [Releases](https://github.com/funkypitt/OpenLibeExtended-eInk-Remix/releases).
 - Allow installs from “Unknown sources” if prompted.
 - Install and launch the app.
 
 **iOS:**  
-- Download the latest ipa from [Releases](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases).
+- Download the latest ipa from [Releases](https://github.com/funkypitt/OpenLibeExtended-eInk-Remix/releases).
 - Sideload the ipa (i recommend one of [these services](https://fmhy.net/beginners-guide#ios-sideloading)
 
 **Windows:**  
-- Download the Windows build from [Releases](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases).
+- Download the Windows build from [Releases](https://github.com/funkypitt/OpenLibeExtended-eInk-Remix/releases).
 - Run the installer
 
 **Linux:**  
-- Download the appropriate AppImage, or Flatpak from [Releases](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases).
+- Download the appropriate AppImage, or Flatpak from [Releases](https://github.com/funkypitt/OpenLibeExtended-eInk-Remix/releases).
 - Run/install according to your distro.
 - You can also install the app from [flathub](https://flathub.org/)
 
@@ -51,8 +51,8 @@ As long as you’re just downloading for personal use and not distributing or up
 ---
 
 ## The app won’t start / crashes / has a bug!
-- Make sure you are using the latest version from [Releases](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases).
-- Check for open issues at [Issues](https://github.com/warreth/OpenLibeExtended-eInk-Remix/issues).
+- Make sure you are using the latest version from [Releases](https://github.com/funkypitt/OpenLibeExtended-eInk-Remix/releases).
+- Check for open issues at [Issues](https://github.com/funkypitt/OpenLibeExtended-eInk-Remix/issues).
 - If not already reported, create a new bug report using the issue template, and attach relevant logs and screenshots.
 
 ---

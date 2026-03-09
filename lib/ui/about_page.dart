@@ -62,14 +62,14 @@ class _AboutPageState extends State<AboutPage> {
                 padding:
                     EdgeInsets.only(left: 7, right: 7, top: 13, bottom: 10),
                 child: Text(
-                  "An Open source app to download and read books from shadow library (Anna's Archive).",
+                  "An open-source eInk-optimized ebook reader and downloader for Anna's Archive. Remixed for e-paper displays with paginated reading, adaptive font sizing, and high-contrast themes.",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               const Padding(
                 padding: EdgeInsets.only(left: 7, right: 7, top: 10),
                 child: Text(
-                  "This is a forked version maintained by warreth for personal use and community updates.",
+                  "Remixed by funkypitt with Claude Opus 4.6.",
                   style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
@@ -79,7 +79,7 @@ class _AboutPageState extends State<AboutPage> {
               const Padding(
                 padding: EdgeInsets.only(left: 7, right: 7, top: 5),
                 child: Text(
-                  "Original app by dstark5 (https://github.com/dstark5/Openlib).",
+                  "Based on OpenLib by dstark5 and OpenLibExtended by warreth.",
                   style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
@@ -111,13 +111,16 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
               const _UrlText(
-                  text: 'This Fork (by warreth)',
-                  url: 'https://github.com/warreth/OpenLibeExtended-eInk-Remix'),
+                  text: 'This Remix (by funkypitt)',
+                  url: 'https://github.com/funkypitt/OpenLibeExtended-eInk-Remix'),
               const _UrlText(
                   text: 'Report An Issue',
-                  url: 'https://github.com/warreth/OpenLibeExtended-eInk-Remix/issues'),
+                  url: 'https://github.com/funkypitt/OpenLibeExtended-eInk-Remix/issues'),
               const _UrlText(
-                  text: 'Original Project (by dstark5)',
+                  text: 'OpenLibExtended (by warreth)',
+                  url: 'https://github.com/warreth/Openlib-Extended'),
+              const _UrlText(
+                  text: 'Original OpenLib (by dstark5)',
                   url: 'https://github.com/dstark5/Openlib'),
               const Padding(
                 padding: EdgeInsets.only(left: 7, right: 7, top: 15),

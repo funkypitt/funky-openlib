@@ -140,6 +140,7 @@ function loadBook(base64Data) {
 }
 
 // Inject CSS into an epub.js contents object to force theme + font size.
+// Removes any previously injected style first, so theme switches take effect.
 function injectStyles(contents) {
   var css;
   if (isDarkTheme) {
@@ -148,7 +149,20 @@ function injectStyles(contents) {
     css = "body, p, div, span, h1, h2, h3, h4, h5, h6, a, li, td, th, blockquote, em, strong, b, i, u, small, big, sub, sup, pre, code, figcaption, cite, dt, dd, label, section, article, aside, header, footer, nav, main { color: #000000 !important; } body, html { background-color: #ffffff !important; }";
   }
   css += " body, p, div, span, li, td, th, blockquote, pre, code, figcaption, cite, dt, dd { font-size: " + currentFontSize + "px !important; line-height: 1.6 !important; }";
-  contents.addStylesheet(css);
+
+  // Remove any previously injected style element so old theme CSS doesn't linger
+  try {
+    var doc = contents.document;
+    var old = doc.getElementById("epubjs-injected-theme");
+    if (old) old.remove();
+    var style = doc.createElement("style");
+    style.id = "epubjs-injected-theme";
+    style.textContent = css;
+    doc.head.appendChild(style);
+  } catch(e) {
+    // Fallback to addStylesheet if direct DOM access fails
+    contents.addStylesheet(css);
+  }
 }
 
 // Re-apply styles to all currently loaded contents

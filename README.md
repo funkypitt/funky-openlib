@@ -4,17 +4,19 @@
 
 # OpenLibeExtended-eInk-Remix
 
-**The ultimate open-source cross-platform client for Anna's Archive. <br/> Download, organize, and read your favorite books on any device.**
-> Fork from [openlib](https://github.com/dstark5/Openlib) with more features and desktop support!
+**An open-source eInk-optimized ebook reader and downloader for Anna's Archive.** <br/>
+**Remixed for e-paper displays with paginated reading, adaptive font sizing, and high-contrast themes.**
+
+> Remixed by **funkypitt** with **Claude Opus 4.6** from [OpenLibExtended](https://github.com/warreth/Openlib-Extended) by warreth and [OpenLib](https://github.com/dstark5/Openlib) by dstark5.
 
 [![made-with-flutter](https://img.shields.io/badge/Made%20with-Flutter-4361ee.svg?style=for-the-badge)](https://flutter.dev/)
 [![AGPLv3 License](https://img.shields.io/badge/License-AGPL%20v3-e63946.svg?style=for-the-badge)](https://opensource.org/licenses/)
-[![Latest release](https://img.shields.io/github/release/warreth/OpenLibeExtended-eInk-Remix.svg?style=for-the-badge)](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases)
-[![Downloads](https://img.shields.io/github/downloads/warreth/OpenLibeExtended-eInk-Remix/total.svg?style=for-the-badge)](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases)
+[![Latest release](https://img.shields.io/github/release/funkypitt/OpenLibeExtended-eInk-Remix.svg?style=for-the-badge)](https://github.com/funkypitt/OpenLibeExtended-eInk-Remix/releases)
+[![Downloads](https://img.shields.io/github/downloads/funkypitt/OpenLibeExtended-eInk-Remix/total.svg?style=for-the-badge)](https://github.com/funkypitt/OpenLibeExtended-eInk-Remix/releases)
 
 [<img src="github_releases.png"
      alt="Get it on GitHub"
-     height="110">](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases)
+     height="110">](https://github.com/funkypitt/OpenLibeExtended-eInk-Remix/releases)
 
 **[📖 Frequently Asked Questions (FAQ)](./FAQ.md)**
 </div>
@@ -30,15 +32,15 @@
 - **Advanced Search**
   Filter by language, extension, and year. Includes instant search suggestions as you type.
 
-- **Built-in Reader**
-  Integrated EPUB and PDF reader with customizable tap zones and gesture support.
+- **eInk-Optimized Reader**
+  Paginated EPUB reader (epub.js) with adaptive font sizing, high-contrast dark/light themes, and tap zones designed for e-paper displays. Scroll view also available.
 
 - **Library Management**
   Track your collection, discover trending books, and export files to other apps.
 
 ## Star History ⭐️
 
-[![Star History Chart](https://api.star-history.com/svg?repos=warreth/OpenLibeExtended-eInk-Remix&type=Date)](https://star-history.com/#warreth/OpenLibeExtended-eInk-Remix&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=funkypitt/OpenLibeExtended-eInk-Remix&type=Date)](https://star-history.com/#funkypitt/OpenLibeExtended-eInk-Remix&Date)
 
 ## Roadmap 🎯
 
@@ -58,14 +60,14 @@
 
 ## Installation 📦
 
-Grab the latest release from [GitHub Releases](https://github.com/warreth/OpenLibeExtended-eInk-Remix/releases).
+Grab the latest release from [GitHub Releases](https://github.com/funkypitt/OpenLibeExtended-eInk-Remix/releases).
 
 **Note:** Publishing this app to the Play Store violates their terms.
 
 ## Development 🛠️
 
 ```bash
-git clone https://github.com/warreth/OpenLibeExtended-eInk-Remix.git
+git clone https://github.com/funkypitt/OpenLibeExtended-eInk-Remix.git
 flutter pub get
 flutter run
 ```
@@ -74,10 +76,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## Donate 🎁
 
-If you like the app, consider supporting the original source or the development of this client.
+If you like the app, consider supporting the original sources:
 
 - [**Donate To Anna’s Archive**](https://annas-archive.org/donate?tier=1) (Support the library itself)
-- [**Sponsor me on GitHub 💖**](https://github.com/sponsors/warreth) (Support the app development)
 
 ## License 📜
 

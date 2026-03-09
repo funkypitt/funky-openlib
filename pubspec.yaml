@@ -1,5 +1,5 @@
 name: openlibe_eink_remix
-description: An Open source app to download and read books from shadow library (Anna`s Archive)
+description: An open-source eInk-optimized ebook reader and downloader for Anna's Archive, remixed for e-paper displays
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev

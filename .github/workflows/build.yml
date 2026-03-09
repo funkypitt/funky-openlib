@@ -233,7 +233,7 @@ jobs:
           [Setup]
           AppName=OpenLibeExtended-eInk-Remix
           AppVersion=${{ needs.prepare.outputs.version }}
-          AppPublisher=warreth
+          AppPublisher=funkypitt
           DefaultDirName={autopf}\OpenLibeExtended-eInk-Remix
           DefaultGroupName=OpenLibeExtended-eInk-Remix
           OutputDir=artifacts

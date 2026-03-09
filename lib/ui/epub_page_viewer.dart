@@ -55,6 +55,7 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final FocusNode _focusNode = FocusNode();
   late int _currentFontSize;
+  bool? _isDark;
 
   @override
   void initState() {
@@ -69,6 +70,13 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _currentFontSize = _getEffectiveFontSize();
+
+    final nowDark = Theme.of(context).brightness == Brightness.dark;
+    if (_isDark != null && _isDark != nowDark && _bookReady) {
+      _isDark = nowDark;
+      _webViewController?.evaluateJavascript(source: 'setTheme($nowDark)');
+    }
+    _isDark = nowDark;
   }
 
   Future<void> _loadSavedPosition() async {

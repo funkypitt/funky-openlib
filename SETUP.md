@@ -28,7 +28,7 @@ cd OpenlibProject
 ### 2. Clone the Repository
 Use Git to clone the project into your newly created directory:
 ```bash
-git clone https://github.com/warreth/OpenLibeExtended-eInk-Remix.git
+git clone https://github.com/funkypitt/OpenLibeExtended-eInk-Remix.git
 ```
 
 ### 3. Navigate to the Project Folder
