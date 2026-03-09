@@ -62,11 +62,13 @@ android {
 
     buildTypes {
         release {
-            // Only use release signing if key.properties exists
+            // Use release signing if key.properties exists, otherwise fall back to debug signing
             if (keystorePropertiesFile.exists()) {
                 signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
             }
-            
+
             minifyEnabled = false
             shrinkResources = false
         }
