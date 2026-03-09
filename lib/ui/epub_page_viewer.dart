@@ -14,12 +14,18 @@ import 'package:openlibe_eink_remix/state/state.dart'
         epubViewModeProvider,
         epubReaderFontSizeProvider;
 
-/// Returns an optimal font size for epub.js based on screen width.
-int getOptimalFontSize(double screenWidth) {
-  if (screenWidth <= 360) return 16;
-  if (screenWidth <= 480) return 17;
-  if (screenWidth <= 600) return 18;
-  if (screenWidth <= 800) return 20;
+/// Returns an optimal font size for epub.js based on screen width
+/// and device pixel ratio (accounts for high-DPI screens).
+int getOptimalFontSize(BuildContext context) {
+  final screenWidth = MediaQuery.of(context).size.width;
+
+  // Base size on logical width, bump up for phone-sized screens.
+  if (screenWidth <= 360) return 18;
+  if (screenWidth <= 420) return 20;
+  if (screenWidth <= 480) return 21;
+  if (screenWidth <= 600) return 22;
+  if (screenWidth <= 800) return 22;
+  // Tablets / desktop
   return 20;
 }
 
@@ -48,6 +54,7 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
   List<_TocEntry> _toc = [];
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final FocusNode _focusNode = FocusNode();
+  late int _currentFontSize;
 
   @override
   void initState() {
@@ -58,10 +65,15 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _currentFontSize = _getEffectiveFontSize();
+  }
+
   Future<void> _loadSavedPosition() async {
     try {
-      final pos =
-          await ref.read(getBookPosition(widget.fileName).future);
+      final pos = await ref.read(getBookPosition(widget.fileName).future);
       if (pos != null && pos.isNotEmpty) {
         _savedCfi = pos;
       }
@@ -97,17 +109,15 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
     final bytes = await File(widget.filePath).readAsBytes();
     final base64Data = base64Encode(bytes);
 
-    // Set theme
+    // Set theme and font size BEFORE loading the book,
+    // so the content hook picks them up from the first render.
     final isDark = Theme.of(context).brightness == Brightness.dark;
     await _webViewController!
         .evaluateJavascript(source: 'setTheme($isDark)');
-
-    // Set font size
-    final fontSize = _getEffectiveFontSize();
     await _webViewController!
-        .evaluateJavascript(source: 'setFontSize($fontSize)');
+        .evaluateJavascript(source: 'setFontSize($_currentFontSize)');
 
-    // Load book
+    // Load book — theme/font will be injected into each section via hooks.content
     await _webViewController!
         .evaluateJavascript(source: 'loadBook("$base64Data")');
   }
@@ -115,8 +125,21 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
   int _getEffectiveFontSize() {
     final configuredSize = ref.read(epubReaderFontSizeProvider);
     if (configuredSize > 0) return configuredSize;
-    final screenWidth = MediaQuery.of(context).size.width;
-    return getOptimalFontSize(screenWidth);
+    return getOptimalFontSize(context);
+  }
+
+  void _increaseFontSize() {
+    _webViewController?.evaluateJavascript(source: 'changeFontSize(2)');
+    setState(() {
+      _currentFontSize = (_currentFontSize + 2).clamp(10, 40);
+    });
+  }
+
+  void _decreaseFontSize() {
+    _webViewController?.evaluateJavascript(source: 'changeFontSize(-2)');
+    setState(() {
+      _currentFontSize = (_currentFontSize - 2).clamp(10, 40);
+    });
   }
 
   void _goNext() {
@@ -145,6 +168,33 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
+          // Font size decrease
+          IconButton(
+            icon: Icon(Icons.text_decrease,
+                color: Theme.of(context).colorScheme.tertiary),
+            tooltip: 'Decrease font size',
+            onPressed: _decreaseFontSize,
+          ),
+          // Font size indicator
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Center(
+              child: Text(
+                '$_currentFontSize',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.tertiary,
+                ),
+              ),
+            ),
+          ),
+          // Font size increase
+          IconButton(
+            icon: Icon(Icons.text_increase,
+                color: Theme.of(context).colorScheme.tertiary),
+            tooltip: 'Increase font size',
+            onPressed: _increaseFontSize,
+          ),
           // Toggle to scroll view
           IconButton(
             icon: Icon(Icons.view_stream,
@@ -219,6 +269,16 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
               _goPrev();
               return KeyEventResult.handled;
             }
+            if (event.logicalKey == LogicalKeyboardKey.equal ||
+                event.logicalKey == LogicalKeyboardKey.numpadAdd) {
+              _increaseFontSize();
+              return KeyEventResult.handled;
+            }
+            if (event.logicalKey == LogicalKeyboardKey.minus ||
+                event.logicalKey == LogicalKeyboardKey.numpadSubtract) {
+              _decreaseFontSize();
+              return KeyEventResult.handled;
+            }
           }
           return KeyEventResult.ignored;
         },
@@ -250,9 +310,7 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
 
                       controller.addJavaScriptHandler(
                         handlerName: 'onRelocated',
-                        callback: (args) {
-                          // args[0] = cfi, args[1] = progress
-                        },
+                        callback: (args) {},
                       );
 
                       controller.addJavaScriptHandler(
@@ -273,7 +331,6 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
                                 _isLoading = false;
                               });
 
-                              // Restore position after book is ready
                               if (_savedCfi != null) {
                                 Future.delayed(
                                     const Duration(milliseconds: 300), () {
@@ -305,9 +362,7 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
             ),
             if (_isLoading)
               Container(
-                color: isDarkMode
-                    ? const Color(0xFF121212)
-                    : Colors.white,
+                color: isDarkMode ? const Color(0xFF121212) : Colors.white,
                 child: Center(
                   child: CircularProgressIndicator(
                     color: Theme.of(context).colorScheme.secondary,

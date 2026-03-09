@@ -29,23 +29,15 @@
     color: #888;
     z-index: 5;
   }
-  /* Transparent tap zones overlaid on top of everything */
   .tap-zone {
     position: fixed;
     top: 0;
     height: 100%;
     z-index: 20;
-    /* fully transparent, no visual effect */
     background: transparent;
   }
-  #tap-prev {
-    left: 0;
-    width: 30%;
-  }
-  #tap-next {
-    right: 0;
-    width: 30%;
-  }
+  #tap-prev { left: 0; width: 30%; }
+  #tap-next { right: 0; width: 30%; }
 </style>
 <script src="jszip.min.js"></script>
 <script src="epub.min.js"></script>
@@ -60,28 +52,20 @@ var book = null;
 var rendition = null;
 var currentCfi = null;
 var isNavigating = false;
+var currentFontSize = 18;
+var isDarkTheme = false;
 
-// Tap zone event listeners — these sit on top of the epub iframe
-// so they always receive taps reliably
 document.getElementById("tap-prev").addEventListener("click", function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  goPrev();
+  e.preventDefault(); e.stopPropagation(); goPrev();
 });
 document.getElementById("tap-next").addEventListener("click", function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  goNext();
+  e.preventDefault(); e.stopPropagation(); goNext();
 });
-
-// Also handle touch events for mobile responsiveness
 document.getElementById("tap-prev").addEventListener("touchend", function(e) {
-  e.preventDefault();
-  goPrev();
+  e.preventDefault(); goPrev();
 });
 document.getElementById("tap-next").addEventListener("touchend", function(e) {
-  e.preventDefault();
-  goNext();
+  e.preventDefault(); goNext();
 });
 
 function loadBook(base64Data) {
@@ -111,24 +95,22 @@ function loadBook(base64Data) {
       } catch(e) {}
     });
 
-    // Also hook into iframe content to handle taps in the middle 40% area
-    // (the tap zones only cover left 30% and right 30%)
+    // Inject theme + font size CSS into every iframe content load.
+    // Uses !important to override any inline styles from the EPUB.
     rendition.hooks.content.register(function(contents) {
+      injectStyles(contents);
+      // Tap handler for middle area
       contents.document.addEventListener("click", function(e) {
         var iframeWidth = contents.document.documentElement.clientWidth;
         var x = e.clientX;
-        if (x < iframeWidth * 0.3) {
-          goPrev();
-        } else if (x > iframeWidth * 0.7) {
-          goNext();
-        }
+        if (x < iframeWidth * 0.3) { goPrev(); }
+        else if (x > iframeWidth * 0.7) { goNext(); }
       });
     });
 
     book.ready.then(function() {
       document.getElementById("loading").style.display = "none";
 
-      // Build TOC
       var tocData = [];
       if (book.navigation && book.navigation.toc) {
         book.navigation.toc.forEach(function(item) {
@@ -144,12 +126,9 @@ function loadBook(base64Data) {
         window.flutter_inappwebview.callHandler("onBookReady", JSON.stringify(tocData));
       } catch(e) {}
 
-      // Generate locations for progress tracking
       book.locations.generate(1600).then(function() {
         if (currentCfi) {
-          try {
-            window.flutter_inappwebview.callHandler("onLocationsReady");
-          } catch(e) {}
+          try { window.flutter_inappwebview.callHandler("onLocationsReady"); } catch(e) {}
         }
       });
     });
@@ -160,59 +139,72 @@ function loadBook(base64Data) {
   }
 }
 
+// Inject CSS into an epub.js contents object to force theme + font size.
+function injectStyles(contents) {
+  var css;
+  if (isDarkTheme) {
+    css = "body, p, div, span, h1, h2, h3, h4, h5, h6, a, li, td, th, blockquote, em, strong, b, i, u, small, big, sub, sup, pre, code, figcaption, cite, dt, dd, label, section, article, aside, header, footer, nav, main { color: #f5f5f5 !important; } body, html { background-color: #121212 !important; } a { color: #90caf9 !important; } img { opacity: 0.85; }";
+  } else {
+    css = "body, p, div, span, h1, h2, h3, h4, h5, h6, a, li, td, th, blockquote, em, strong, b, i, u, small, big, sub, sup, pre, code, figcaption, cite, dt, dd, label, section, article, aside, header, footer, nav, main { color: #000000 !important; } body, html { background-color: #ffffff !important; }";
+  }
+  css += " body, p, div, span, li, td, th, blockquote, pre, code, figcaption, cite, dt, dd { font-size: " + currentFontSize + "px !important; line-height: 1.6 !important; }";
+  contents.addStylesheet(css);
+}
+
+// Re-apply styles to all currently loaded contents
+function reapplyStyles() {
+  if (!rendition) return;
+  var allContents = rendition.getContents();
+  for (var i = 0; i < allContents.length; i++) {
+    injectStyles(allContents[i]);
+  }
+}
+
 function goNext() {
   if (rendition && !isNavigating) {
     isNavigating = true;
-    rendition.next().then(function() {
-      isNavigating = false;
-    }).catch(function() {
-      isNavigating = false;
-    });
+    rendition.next().then(function() { isNavigating = false; }).catch(function() { isNavigating = false; });
   }
 }
 
 function goPrev() {
   if (rendition && !isNavigating) {
     isNavigating = true;
-    rendition.prev().then(function() {
-      isNavigating = false;
-    }).catch(function() {
-      isNavigating = false;
-    });
+    rendition.prev().then(function() { isNavigating = false; }).catch(function() { isNavigating = false; });
   }
 }
 
 function goToCfi(cfi) {
-  if (rendition && cfi) {
-    rendition.display(cfi);
-  }
+  if (rendition && cfi) rendition.display(cfi);
 }
 
 function goToHref(href) {
-  if (rendition && href) {
-    rendition.display(href);
-  }
+  if (rendition && href) rendition.display(href);
 }
 
 function setFontSize(px) {
+  currentFontSize = px;
   if (rendition) {
     rendition.themes.fontSize(px + "px");
+    reapplyStyles();
   }
 }
 
-function setTheme(isDark) {
-  if (isDark) {
+function changeFontSize(delta) {
+  var newSize = Math.max(10, Math.min(40, currentFontSize + delta));
+  setFontSize(newSize);
+  return newSize;
+}
+
+function setTheme(dark) {
+  isDarkTheme = dark;
+  if (dark) {
     document.body.classList.add("dark");
-    if (rendition) {
-      rendition.themes.override("color", "#f5f5f5");
-      rendition.themes.override("background", "#121212");
-    }
   } else {
     document.body.classList.remove("dark");
-    if (rendition) {
-      rendition.themes.override("color", "#000000");
-      rendition.themes.override("background", "#ffffff");
-    }
+  }
+  if (rendition) {
+    reapplyStyles();
   }
 }
 

@@ -182,8 +182,7 @@ class _EpubScrollViewerState extends ConsumerState<EpubScrollViewer> {
   int _getEffectiveFontSize() {
     final configuredSize = ref.read(epubReaderFontSizeProvider);
     if (configuredSize > 0) return configuredSize;
-    final screenWidth = MediaQuery.of(context).size.width;
-    return getOptimalFontSize(screenWidth);
+    return getOptimalFontSize(context);
   }
 
   @override
