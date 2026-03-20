@@ -237,7 +237,12 @@ class _EpubScrollViewerState extends ConsumerState<EpubScrollViewer> {
                     }
                   },
                   onChapterChanged: (value) {
-                    // Optional: auto-save on chapter change
+                    // Save position on every chapter change
+                    final cfi = _epubReaderController.generateEpubCfi();
+                    if (cfi != null && cfi.isNotEmpty) {
+                      MyLibraryDb.instance
+                          .saveBookState(widget.fileName, cfi);
+                    }
                   },
                   builders: EpubViewBuilders<DefaultBuilderOptions>(
                     options: DefaultBuilderOptions(

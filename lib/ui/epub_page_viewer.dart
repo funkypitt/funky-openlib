@@ -7,9 +7,9 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:openlibe_eink_remix/services/epub_assets.dart';
+import 'package:openlibe_eink_remix/services/database.dart' show MyLibraryDb;
 import 'package:openlibe_eink_remix/state/state.dart'
     show
-        saveEpubState,
         getBookPosition,
         epubViewModeProvider,
         epubReaderFontSizeProvider;
@@ -51,6 +51,7 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
   bool _isLoading = true;
   bool _bookReady = false;
   String? _savedCfi;
+  String? _currentCfi; // Updated by onRelocated, used for sync save in deactivate
   List<_TocEntry> _toc = [];
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final FocusNode _focusNode = FocusNode();
@@ -84,13 +85,29 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
       final pos = await ref.read(getBookPosition(widget.fileName).future);
       if (pos != null && pos.isNotEmpty) {
         _savedCfi = pos;
+        // If the book was already ready before we finished loading, restore now
+        if (_bookReady) {
+          _restorePositionWhenReady();
+        }
       }
     } catch (_) {}
   }
 
+  void _restorePositionWhenReady() {
+    if (_savedCfi == null) return;
+    final cfi = _savedCfi!;
+    Future.delayed(const Duration(milliseconds: 300), () {
+      _webViewController?.evaluateJavascript(
+          source: 'goToCfi("${cfi.replaceAll('"', '\\"')}")');
+    });
+  }
+
   @override
   void deactivate() {
-    _savePosition();
+    // Save _currentCfi directly — no async JS call that could race with WebView destruction
+    if (_currentCfi != null && _currentCfi!.isNotEmpty) {
+      MyLibraryDb.instance.saveBookState(widget.fileName, _currentCfi!);
+    }
     super.deactivate();
   }
 
@@ -98,17 +115,6 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
   void dispose() {
     _focusNode.dispose();
     super.dispose();
-  }
-
-  Future<void> _savePosition() async {
-    if (_webViewController == null || !_bookReady) return;
-    try {
-      final result = await _webViewController!
-          .evaluateJavascript(source: 'getCurrentCfi()');
-      if (result != null && result.toString().isNotEmpty) {
-        saveEpubState(widget.fileName, result.toString(), ref);
-      }
-    } catch (_) {}
   }
 
   Future<void> _injectBook() async {
@@ -318,7 +324,17 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
 
                       controller.addJavaScriptHandler(
                         handlerName: 'onRelocated',
-                        callback: (args) {},
+                        callback: (args) {
+                          if (args.isNotEmpty) {
+                            final cfi = args[0]?.toString();
+                            if (cfi != null && cfi.isNotEmpty) {
+                              _currentCfi = cfi;
+                              // Save position to DB on every relocation
+                              MyLibraryDb.instance
+                                  .saveBookState(widget.fileName, cfi);
+                            }
+                          }
+                        },
                       );
 
                       controller.addJavaScriptHandler(
@@ -339,14 +355,7 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
                                 _isLoading = false;
                               });
 
-                              if (_savedCfi != null) {
-                                Future.delayed(
-                                    const Duration(milliseconds: 300), () {
-                                  _webViewController?.evaluateJavascript(
-                                      source:
-                                          'goToCfi("${_savedCfi!.replaceAll('"', '\\"')}")');
-                                });
-                              }
+                              _restorePositionWhenReady();
                             } catch (_) {
                               setState(() {
                                 _bookReady = true;

@@ -466,7 +466,7 @@ final getBookPosition =
 // ====================================================================
 
 Future<void> savePdfState(String fileName, WidgetRef ref) async {
-  String position = ref.watch(pdfCurrentPage).toString();
+  String position = ref.read(pdfCurrentPage).toString();
   await dataBase.saveBookState(fileName, position);
 }
 

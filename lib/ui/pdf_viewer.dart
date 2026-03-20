@@ -12,6 +12,7 @@ import 'package:openlibe_eink_remix/services/files.dart' show getFilePath;
 import 'package:openlibe_eink_remix/services/platform_utils.dart';
 import 'package:openlibe_eink_remix/ui/components/snack_bar_widget.dart';
 
+import 'package:openlibe_eink_remix/services/database.dart' show MyLibraryDb;
 import 'package:openlibe_eink_remix/state/state.dart'
     show
         filePathProvider,
@@ -210,6 +211,9 @@ class _PdfViewerState extends ConsumerState<PdfViewer> {
                     onPageChanged: (page, total) {
                       ref.read(pdfCurrentPage.notifier).state = page ?? 0;
                       ref.read(totalPdfPage.notifier).state = total ?? 0;
+                      // Save position on every page change
+                      MyLibraryDb.instance.saveBookState(
+                          widget.fileName, (page ?? 0).toString());
                     },
                   ),
                 );
@@ -227,6 +231,9 @@ class _PdfViewerState extends ConsumerState<PdfViewer> {
                     onPageChanged: (page, total) {
                       ref.read(pdfCurrentPage.notifier).state = page ?? 0;
                       ref.read(totalPdfPage.notifier).state = total ?? 0;
+                      // Save position on every page change
+                      MyLibraryDb.instance.saveBookState(
+                          widget.fileName, (page ?? 0).toString());
                     },
                   ),
                 );
