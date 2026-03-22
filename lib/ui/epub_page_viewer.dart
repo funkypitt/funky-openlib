@@ -318,6 +318,8 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
                       useOnLoadResource: false,
                       supportZoom: false,
                       transparentBackground: isDarkMode,
+                      hardwareAcceleration: false,
+                      useWideViewPort: true,
                     ),
                     onWebViewCreated: (controller) {
                       _webViewController = controller;
