@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenLibe e-Ink Remix</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    max-width: 720px;
+    margin: 2rem auto;
+    padding: 0 1.25rem;
+    line-height: 1.55;
+    color: #222;
+  }
+  h1, h2 { line-height: 1.25; }
+  h1 { margin-bottom: 0.25rem; }
+  h2 { margin-top: 2rem; border-bottom: 1px solid #eee; padding-bottom: 0.25rem; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  pre { background: #f6f6f6; padding: 0.75rem 1rem; overflow-x: auto; border-radius: 4px; }
+  ul { padding-left: 1.25rem; }
+  a { color: #2a5db0; }
+  blockquote {
+    border-left: 3px solid #ccc;
+    margin: 1rem 0;
+    padding: 0.25rem 0 0.25rem 1rem;
+    color: #555;
+  }
+</style>
+</head>
+<body>
+
+<h1>OpenLibe e-Ink Remix</h1>
+<p><em>Open-source e-ink optimized e-book reader with library catalogue search.</em></p>
+
+<h2>Overview</h2>
+<p>
+  Cross-platform e-book reader (Flutter) optimized for e-ink displays. Paginated EPUB reading
+  with adaptive font sizing, high-contrast themes, and tap zones designed for e-paper. Browse
+  and download from online library catalogues, manage a local collection, and read offline.
+</p>
+<p>
+  Remixed by <strong>funkypitt</strong> from
+  <a href="https://github.com/warreth/Openlib-Extended">OpenLibExtended</a> by warreth and
+  <a href="https://github.com/dstark5/Openlib">OpenLib</a> by dstark5.
+</p>
+
+<h2>Features</h2>
+<ul>
+  <li><strong>E-ink optimised reader</strong> — paginated EPUB (epub.js) with adaptive font sizing, high-contrast dark/light themes, scroll mode also available</li>
+  <li><strong>Library search</strong> — search and browse online library catalogues; filter by language, extension, year</li>
+  <li><strong>Resilient downloads</strong> — multi-instance engine that auto-balances and fails over between mirrors</li>
+  <li><strong>Library management</strong> — track your collection, discover trending books, export files</li>
+  <li><strong>Cross-platform</strong> — Android, iOS, Windows, Linux, macOS</li>
+</ul>
+
+<h2>Screenshots</h2>
+<p>See the <code>screenshots/</code> folder at the repo root (Screenshot_1.png through Screenshot_5.png).</p>
+
+<h2>Build &amp; install</h2>
+<p>Standard Flutter project.</p>
+<pre>git clone https://github.com/funkypitt/funky-openlib.git
+cd funky-openlib
+flutter pub get
+flutter run
+
+# Release builds
+flutter build apk --release
+flutter build appbundle --release
+</pre>
+<p>Pre-built APKs are available from
+<a href="https://github.com/funkypitt/funky-openlib/releases">GitHub Releases</a> or via the
+F-Droid repo at <code>https://funkypitt.github.io/fdroid-repo/repo</code>.</p>
+
+<h2>Legal disclaimer</h2>
+<p>
+  This application is a general-purpose e-book reader and search interface. It does not host,
+  store, distribute, or control any content. The developer has no affiliation with any library
+  or content repository accessible through the app. Users are solely responsible for ensuring
+  their use complies with applicable copyright laws.
+</p>
+
+<h2>License</h2>
+<p>GNU Affero General Public License v3.0. See the <code>LICENSE</code> file.</p>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+[en]
+E-ink optimized e-book reader and library browser.
+
+OpenLibe e-Ink Remix is an open-source e-book reader rebuilt for e-paper displays. Read EPUBs in a paginated view with adaptive font sizing, high-contrast themes, and tap zones designed for e-ink. Search and download from online library catalogues, manage your local collection, and read fully offline.
+
+The download engine spans multiple mirrors and fails over automatically when one is slow or unavailable. Library search supports filters by language, file extension, and year.
+
+This application is a reading tool. It does not host any content. Users are solely responsible for compliance with copyright laws in their jurisdiction.
+
+- Paginated EPUB reader with adaptive font sizing
+- High-contrast dark/light themes for e-paper
+- Scroll mode also available
+- Online library catalogue search and download
+- Resilient multi-mirror download engine
+- Local library management
+
+---
+[fr]
+Lecteur d'ePub et catalogue de bibliothèque optimisés pour l'e-ink.
+
+OpenLibe e-Ink Remix est un lecteur d'ePub libre, repensé pour les écrans e-paper. Lecture paginée des ePub avec taille de police adaptative, thèmes à fort contraste et zones tactiles pensées pour l'e-ink. Cherchez et téléchargez depuis les catalogues de bibliothèques en ligne, gérez votre collection locale et lisez entièrement hors ligne.
+
+Le moteur de téléchargement gère plusieurs miroirs et bascule automatiquement quand l'un d'eux est lent ou indisponible. La recherche supporte des filtres par langue, extension de fichier et année.
+
+Cette application est un outil de lecture. Elle n'héberge aucun contenu. L'utilisateur est seul responsable du respect des lois sur le droit d'auteur de sa juridiction.
+
+- Lecteur ePub paginé avec taille de police adaptative
+- Thèmes sombres/clairs à fort contraste pour e-paper
+- Mode défilement également disponible
+- Recherche et téléchargement de catalogues de bibliothèques en ligne
+- Moteur de téléchargement résilient multi-miroirs
+- Gestion de la bibliothèque locale
