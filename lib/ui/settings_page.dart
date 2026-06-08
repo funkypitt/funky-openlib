@@ -1,4 +1,5 @@
 // Dart imports:
+import 'dart:convert';
 import 'dart:io';
 
 // Flutter imports:
@@ -24,6 +25,9 @@ import 'package:openlibe_eink_remix/ui/about_page.dart';
 import 'package:openlibe_eink_remix/ui/instances_page.dart';
 import 'package:openlibe_eink_remix/ui/onboarding/onboarding_page.dart';
 
+import 'package:openlibe_eink_remix/services/webdav_client.dart'
+    show WebDavAuthException;
+import 'package:openlibe_eink_remix/services/webdav_sync.dart';
 import 'package:openlibe_eink_remix/state/state.dart'
     show
         themeModeProvider,
@@ -40,7 +44,10 @@ import 'package:openlibe_eink_remix/state/state.dart'
         donationKeyProvider,
         cookieProvider,
         isLoggedInProvider,
-        myLibraryProvider;
+        myLibraryProvider,
+        webdavSyncEnabledProvider,
+        webdavAutoSyncProvider,
+        webdavLastSyncProvider;
 import 'package:openlibe_eink_remix/ui/login_page.dart';
 
 // Scans a directory for book files (epub, pdf) and imports them to the library database
@@ -381,6 +388,9 @@ class SettingsPage extends ConsumerWidget {
             const SizedBox(height: 20),
             _buildSectionHeader(context, "Account"),
             _buildAccountTile(context, ref),
+            const SizedBox(height: 20),
+            _buildSectionHeader(context, "Sync"),
+            const _WebDavSyncWidget(),
             const SizedBox(height: 20),
             _buildSectionHeader(context, "Advanced"),
             _buildSwitchTile(
@@ -1076,6 +1086,370 @@ class _AutoRankInstancesWidgetState
             ),
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _WebDavSyncWidget extends ConsumerStatefulWidget {
+  const _WebDavSyncWidget();
+
+  @override
+  ConsumerState<_WebDavSyncWidget> createState() => _WebDavSyncWidgetState();
+}
+
+class _WebDavSyncWidgetState extends ConsumerState<_WebDavSyncWidget> {
+  final WebDavSyncService _syncService = WebDavSyncService();
+  bool _isSyncing = false;
+  String _syncStatusText = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _syncService.progressStream.listen((progress) {
+      if (!mounted) return;
+      setState(() {
+        switch (progress.status) {
+          case SyncStatus.connecting:
+            _isSyncing = true;
+            _syncStatusText = progress.message;
+          case SyncStatus.uploading:
+          case SyncStatus.downloading:
+            _isSyncing = true;
+            _syncStatusText = progress.message;
+          case SyncStatus.merging:
+            _isSyncing = true;
+            _syncStatusText = progress.message;
+          case SyncStatus.completed:
+            _isSyncing = false;
+            _syncStatusText = progress.message;
+            ref.read(webdavLastSyncProvider.notifier).state =
+                DateTime.now().toIso8601String();
+            ref.invalidate(myLibraryProvider);
+          case SyncStatus.failed:
+            _isSyncing = false;
+            _syncStatusText = progress.errorMessage ?? 'Sync failed';
+          case SyncStatus.idle:
+            _isSyncing = false;
+            _syncStatusText = '';
+        }
+      });
+    });
+  }
+
+  String _formatLastSync(String lastSync) {
+    if (lastSync == 'Never' || lastSync.isEmpty) return 'Never';
+    try {
+      final dt = DateTime.parse(lastSync).toLocal();
+      final now = DateTime.now();
+      final diff = now.difference(dt);
+      if (diff.inMinutes < 1) return 'Just now';
+      if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+      if (diff.inHours < 24) return '${diff.inHours}h ago';
+      return '${dt.day}/${dt.month}/${dt.year} ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return lastSync;
+    }
+  }
+
+  Future<void> _showConfigDialog() async {
+    final dataBase = MyLibraryDb.instance;
+    String url = '';
+    String username = '';
+    String password = '';
+    String remotePath = '/OpenLib';
+
+    try {
+      url = await dataBase.getPreference('webdavUrl') as String;
+    } catch (_) {}
+    try {
+      username = await dataBase.getPreference('webdavUsername') as String;
+    } catch (_) {}
+    try {
+      final encoded =
+          await dataBase.getPreference('webdavPassword') as String;
+      if (encoded.isNotEmpty) {
+        password = utf8.decode(base64Decode(encoded));
+      }
+    } catch (_) {}
+    try {
+      remotePath =
+          await dataBase.getPreference('webdavRemotePath') as String;
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    final urlController = TextEditingController(text: url);
+    final usernameController = TextEditingController(text: username);
+    final passwordController = TextEditingController(text: password);
+    final remotePathController = TextEditingController(text: remotePath);
+    bool isTesting = false;
+    String? testResult;
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("WebDAV Server"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: urlController,
+                  decoration: InputDecoration(
+                    labelText: "Server URL",
+                    hintText: "https://123456.connect.kdrive.infomaniak.com",
+                    helperText:
+                        !urlController.text.startsWith('https') &&
+                                urlController.text.isNotEmpty
+                            ? "HTTPS recommended for security"
+                            : null,
+                    helperStyle: const TextStyle(color: Colors.orange),
+                  ),
+                  keyboardType: TextInputType.url,
+                  onChanged: (_) => setDialogState(() {}),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: usernameController,
+                  decoration: const InputDecoration(
+                    labelText: "Username",
+                    hintText: "email@example.com",
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: passwordController,
+                  decoration: const InputDecoration(
+                    labelText: "Password",
+                    hintText: "Application password",
+                  ),
+                  obscureText: true,
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: remotePathController,
+                  decoration: const InputDecoration(
+                    labelText: "Remote Path",
+                    hintText: "/OpenLib",
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (testResult != null)
+                  Text(
+                    testResult!,
+                    style: TextStyle(
+                      color: testResult!.contains('Success')
+                          ? Colors.green
+                          : Colors.red,
+                      fontSize: 12,
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  onPressed: isTesting
+                      ? null
+                      : () async {
+                          setDialogState(() {
+                            isTesting = true;
+                            testResult = null;
+                          });
+                          try {
+                            final ok =
+                                await _syncService.testConnectionWith(
+                              url: urlController.text.trim(),
+                              username: usernameController.text.trim(),
+                              password: passwordController.text,
+                              remotePath:
+                                  remotePathController.text.trim(),
+                            );
+                            setDialogState(() {
+                              testResult = ok
+                                  ? 'Success — connected!'
+                                  : 'Failed — could not connect';
+                              isTesting = false;
+                            });
+                          } on WebDavAuthException {
+                            setDialogState(() {
+                              testResult =
+                                  'Authentication failed — check credentials';
+                              isTesting = false;
+                            });
+                          } catch (e) {
+                            setDialogState(() {
+                              testResult = 'Error: $e';
+                              isTesting = false;
+                            });
+                          }
+                        },
+                  icon: isTesting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.wifi_find),
+                  label: Text(isTesting ? 'Testing...' : 'Test Connection'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                "Cancel",
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? Colors.black
+                      : Colors.white,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                await _syncService.saveCredentials(
+                  url: urlController.text.trim(),
+                  username: usernameController.text.trim(),
+                  password: passwordController.text,
+                  remotePath: remotePathController.text.trim(),
+                );
+                ref.read(webdavSyncEnabledProvider.notifier).state = true;
+                if (context.mounted) Navigator.pop(context);
+              },
+              child: Text(
+                "Save",
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? Colors.black
+                      : Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _syncNow() async {
+    if (_isSyncing) return;
+    setState(() {
+      _isSyncing = true;
+      _syncStatusText = 'Starting sync...';
+    });
+    await _syncService.performSync();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final syncEnabled = ref.watch(webdavSyncEnabledProvider);
+    final autoSync = ref.watch(webdavAutoSyncProvider);
+    final lastSync = ref.watch(webdavLastSyncProvider);
+    final dataBase = MyLibraryDb.instance;
+
+    return Column(
+      children: [
+        // Configure server
+        Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.tertiaryContainer,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ListTile(
+            onTap: _showConfigDialog,
+            leading: Icon(Icons.cloud,
+                color: Theme.of(context).colorScheme.secondary),
+            title: const Text("WebDAV Server",
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: Text(
+              syncEnabled ? 'Configured' : 'Not configured',
+              style: const TextStyle(fontSize: 12),
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+
+        // Auto-sync toggle
+        if (syncEnabled)
+          Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.tertiaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: SwitchListTile(
+              value: autoSync,
+              onChanged: (val) {
+                ref.read(webdavAutoSyncProvider.notifier).state = val;
+                dataBase.savePreference('webdavAutoSync', val);
+              },
+              activeThumbColor: Theme.of(context).colorScheme.secondary,
+              title: const Text("Sync on App Open",
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: const Text("Automatically sync when the app starts",
+                  style: TextStyle(fontSize: 12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+
+        // Sync now button
+        if (syncEnabled)
+          Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.tertiaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ListTile(
+              onTap: _isSyncing ? null : _syncNow,
+              leading: _isSyncing
+                  ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    )
+                  : Icon(Icons.sync,
+                      color: Theme.of(context).colorScheme.secondary),
+              title: Text(
+                _isSyncing ? 'Syncing...' : 'Sync Now',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                _isSyncing
+                    ? _syncStatusText
+                    : 'Last sync: ${_formatLastSync(lastSync)}',
+                style: const TextStyle(fontSize: 12),
+              ),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+
+        // Sync status message
+        if (_syncStatusText.isNotEmpty && !_isSyncing)
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 10),
+            child: Text(
+              _syncStatusText,
+              style: TextStyle(
+                fontSize: 12,
+                color: _syncStatusText.contains('failed') ||
+                        _syncStatusText.contains('error') ||
+                        _syncStatusText.contains('Failed')
+                    ? Colors.red
+                    : Colors.green,
+              ),
+            ),
+          ),
       ],
     );
   }

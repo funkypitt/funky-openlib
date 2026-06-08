@@ -1,4 +1,5 @@
 // Dart imports:
+import 'dart:convert';
 import 'dart:io';
 
 // Package imports:
@@ -227,6 +228,20 @@ class MyLibraryDb {
       {'fileName': fileName, 'position': position},
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    await _updatePositionTimestamp(fileName);
+  }
+
+  Future<void> _updatePositionTimestamp(String fileName) async {
+    try {
+      Map<String, String> timestamps = {};
+      try {
+        final json = await getPreference('syncPositionTimestamps') as String;
+        final map = jsonDecode(json) as Map<String, dynamic>;
+        timestamps = map.map((k, v) => MapEntry(k, v as String));
+      } catch (_) {}
+      timestamps[fileName] = DateTime.now().toUtc().toIso8601String();
+      await savePreference('syncPositionTimestamps', jsonEncode(timestamps));
+    } catch (_) {}
   }
 
   Future<void> deleteBookState(String fileName) async {
@@ -309,6 +324,32 @@ class MyLibraryDb {
       return dataList[0]['value'];
     } else {
       return "";
+    }
+  }
+
+  Future<List<Map<String, String>>> getAllBookPositions() async {
+    final dbInstance = await instance.database;
+    final data = await dbInstance.query('bookposition');
+    return data
+        .map((row) => {
+              'fileName': row['fileName'] as String,
+              'position': row['position'] as String,
+            })
+        .toList();
+  }
+
+  Future<void> importBookPositions(
+      List<Map<String, dynamic>> positions) async {
+    final dbInstance = await instance.database;
+    for (final pos in positions) {
+      await dbInstance.insert(
+        'bookposition',
+        {
+          'fileName': pos['fileName'] as String,
+          'position': pos['position'] as String,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
   }
 }

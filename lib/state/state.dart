@@ -20,6 +20,7 @@ import 'package:openlibe_eink_remix/services/open_library.dart';
 import 'package:openlibe_eink_remix/services/goodreads.dart';
 import 'package:openlibe_eink_remix/services/instance_manager.dart';
 import 'package:openlibe_eink_remix/services/download_manager.dart';
+import 'package:openlibe_eink_remix/services/webdav_sync.dart';
 // Assuming OpenLibrary, Goodreads, PenguinRandomHouse, BookDigits, and SubCategoriesTypeList are defined
 // or are simple placeholder services/models that work as intended.
 
@@ -274,6 +275,22 @@ final showManualDownloadButtonProvider = StateProvider<bool>((ref) => false);
 
 // Instance Auto-Ranking Setting (default: enabled)
 final autoRankInstancesProvider = StateProvider<bool>((ref) => true);
+
+// WebDAV Sync Providers
+final webdavSyncEnabledProvider = StateProvider<bool>((ref) => false);
+final webdavAutoSyncProvider = StateProvider<bool>((ref) => false);
+final webdavLastSyncProvider = StateProvider<String>((ref) => 'Never');
+
+final webdavSyncServiceProvider = Provider<WebDavSyncService>((ref) {
+  final service = WebDavSyncService();
+  ref.onDispose(() => service.dispose());
+  return service;
+});
+
+final webdavSyncProgressProvider = StreamProvider<SyncProgress>((ref) {
+  final service = ref.watch(webdavSyncServiceProvider);
+  return service.progressStream;
+});
 
 // Instance Management States
 final instanceManagerProvider =

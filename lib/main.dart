@@ -29,6 +29,7 @@ import 'package:openlibe_eink_remix/services/download_manager.dart';
 import 'package:openlibe_eink_remix/services/download_notification.dart';
 import 'package:openlibe_eink_remix/services/instance_manager.dart';
 import 'package:openlibe_eink_remix/services/mirror_fetcher.dart';
+import 'package:openlibe_eink_remix/services/webdav_sync.dart';
 import 'package:openlibe_eink_remix/state/state.dart'
     show
         ThemeModeNotifier,
@@ -41,6 +42,9 @@ import 'package:openlibe_eink_remix/state/state.dart'
         epubReaderFontSizeProvider,
         showManualDownloadButtonProvider,
         autoRankInstancesProvider,
+        webdavSyncEnabledProvider,
+        webdavAutoSyncProvider,
+        webdavLastSyncProvider,
         userAgentProvider,
         cookieProvider,
         donationKeyProvider,
@@ -161,6 +165,20 @@ void main(List<String> args) async {
     savedEpubFontSize = 0;
   }
 
+  // Load WebDAV sync preferences
+  bool webdavSyncEnabled = await dataBase
+          .getPreference('webdavSyncEnabled')
+          .catchError((e) => 0) ==
+      1;
+  bool webdavAutoSync = await dataBase
+          .getPreference('webdavAutoSync')
+          .catchError((e) => 0) ==
+      1;
+  String webdavLastSync = await dataBase
+          .getPreference('webdavLastSync')
+          .catchError((e) => 'Never') as String? ??
+      'Never';
+
   // Check onboarding status
   bool onboardingCompleted = await dataBase
           .getPreference('onboardingCompleted')
@@ -195,6 +213,9 @@ void main(List<String> args) async {
         selectedFileTypeState.overrideWith((ref) => savedFileType),
         selectedLanguageState.overrideWith((ref) => savedLanguage),
         selectedYearState.overrideWith((ref) => savedYear),
+        webdavSyncEnabledProvider.overrideWith((ref) => webdavSyncEnabled),
+        webdavAutoSyncProvider.overrideWith((ref) => webdavAutoSync),
+        webdavLastSyncProvider.overrideWith((ref) => webdavLastSync),
       ],
       child: MyApp(onboardingCompleted: onboardingCompleted),
     ),
@@ -260,6 +281,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _autoRankInstancesOnStartup();
     });
+    // Auto-sync via WebDAV on startup if enabled
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _autoSyncOnStartup();
+    });
   }
 
   Future<void> _autoRankInstancesOnStartup() async {
@@ -278,6 +303,25 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     } catch (e) {
       // Silently fail - don't interrupt user flow
       debugPrint("Auto-ranking failed: $e");
+    }
+  }
+
+  Future<void> _autoSyncOnStartup() async {
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+
+    final autoSync = ref.read(webdavAutoSyncProvider);
+    final syncEnabled = ref.read(webdavSyncEnabledProvider);
+    if (autoSync && syncEnabled) {
+      try {
+        await WebDavSyncService().performSync();
+        if (mounted) {
+          final lastSync = DateTime.now().toIso8601String();
+          ref.read(webdavLastSyncProvider.notifier).state = lastSync;
+        }
+      } catch (e) {
+        debugPrint("Auto-sync failed: $e");
+      }
     }
   }
 
