@@ -92,8 +92,18 @@ class InstanceManager {
   static const String _storageKey = 'archive_instances';
   static const String _selectedInstanceKey = 'selected_instance_id';
 
-  // Default instances including all Anna's Archive mirrors and welib.org
+  // Default Anna's Archive mirrors, ordered by reliability.
+  // Only verified-reachable domains are shipped as defaults; dead/blocked
+  // mirrors (e.g. .vg, welib.org) were removed to avoid failed downloads.
+  // Users can still add custom instances via the Instances page.
   static final List<ArchiveInstance> _defaultInstances = [
+    ArchiveInstance(
+      id: 'annas_archive_se',
+      name: "Anna's Archive (.se)",
+      baseUrl: 'https://annas-archive.se',
+      priority: 1,
+      enabled: true,
+    ),
     ArchiveInstance(
       id: 'annas_archive_gl',
       name: "Anna's Archive (.gl)",
@@ -109,24 +119,10 @@ class InstanceManager {
       enabled: true,
     ),
     ArchiveInstance(
-      id: 'annas_archive_vg',
-      name: "Anna's Archive (.vg)",
-      baseUrl: 'https://annas-archive.vg',
-      priority: 4,
-      enabled: true,
-    ),
-      ArchiveInstance(
       id: 'annas_archive_gd',
       name: "Anna's Archive (.gd)",
       baseUrl: 'https://annas-archive.gd',
       priority: 4,
-      enabled: true,
-    ),
-    ArchiveInstance(
-      id: 'welib_org',
-      name: 'Welib.org',
-      baseUrl: 'https://welib.org',
-      priority: 5,
       enabled: true,
     ),
   ];
