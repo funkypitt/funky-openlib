@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Project imports:
 import 'package:openlibe_eink_remix/state/state.dart'
-    show checkIdExists, languageCodeToDisplay;
+    show checkIdExists, languageCodeToDisplay, bookProgressProvider;
 import 'package:openlibe_eink_remix/ui/extensions.dart';
 
 // Extract file type from book info string
@@ -59,6 +59,7 @@ class BookInfoCard extends ConsumerWidget {
     required this.link,
     required this.onClick,
     this.md5,
+    this.fileName,
   });
 
   final String title;
@@ -69,6 +70,7 @@ class BookInfoCard extends ConsumerWidget {
   final String link;
   final VoidCallback onClick;
   final String? md5;
+  final String? fileName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -79,6 +81,11 @@ class BookInfoCard extends ConsumerWidget {
     final isDownloaded = md5 != null
         ? ref.watch(checkIdExists(md5!))
         : const AsyncValue<bool>.data(false);
+
+    // Reading progress (only if fileName is provided)
+    final progress = fileName != null
+        ? ref.watch(bookProgressProvider(fileName!)).valueOrNull
+        : null;
 
     return InkWell(
       onTap: onClick,
@@ -146,6 +153,45 @@ class BookInfoCard extends ConsumerWidget {
                         Icons.check,
                         color: Colors.white,
                         size: 16,
+                      ),
+                    ),
+                  ),
+                // Reading progress badge
+                if (progress != null && progress > 0)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(5),
+                          bottomRight: Radius.circular(5),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          LinearProgressIndicator(
+                            value: progress.clamp(0.0, 1.0),
+                            minHeight: 3,
+                            backgroundColor: Colors.white24,
+                            valueColor: const AlwaysStoppedAnimation(
+                                Colors.greenAccent),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 1),
+                            child: Text(
+                              '${(progress.clamp(0.0, 1.0) * 100).round()}%',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

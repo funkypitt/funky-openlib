@@ -478,6 +478,12 @@ final getBookPosition =
   return await dataBase.getBookState(fileName);
 });
 
+// Reading progress (0.0–1.0) for a book, keyed by its file name.
+final bookProgressProvider =
+    FutureProvider.family.autoDispose<double?, String>((ref, fileName) async {
+  return await dataBase.getBookProgress(fileName);
+});
+
 // ====================================================================
 // BOOK STATE PERSISTENCE FUNCTIONS
 // ====================================================================

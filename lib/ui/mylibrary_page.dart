@@ -143,6 +143,7 @@ class _MyLibraryPageState extends ConsumerState<MyLibraryPage> {
                               thumbnail: i.thumbnail,
                               info: i.info,
                               link: i.link,
+                              fileName: i.getFileName(),
                               onClick: () {
                                 Navigator.push(context, MaterialPageRoute(
                                     builder: (BuildContext context) {

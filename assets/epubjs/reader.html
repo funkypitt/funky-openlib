@@ -29,15 +29,6 @@
     color: #888;
     z-index: 5;
   }
-  .tap-zone {
-    position: fixed;
-    top: 0;
-    height: 100%;
-    z-index: 20;
-    background: transparent;
-  }
-  #tap-prev { left: 0; width: 30%; }
-  #tap-next { right: 0; width: 30%; }
 </style>
 <script src="jszip.min.js"></script>
 <script src="epub.min.js"></script>
@@ -45,8 +36,6 @@
 <body>
 <div id="viewer"></div>
 <div id="loading">Loading...</div>
-<div id="tap-prev" class="tap-zone"></div>
-<div id="tap-next" class="tap-zone"></div>
 <script>
 var book = null;
 var rendition = null;
@@ -55,18 +44,58 @@ var isNavigating = false;
 var currentFontSize = 18;
 var isDarkTheme = false;
 
-document.getElementById("tap-prev").addEventListener("click", function(e) {
-  e.preventDefault(); e.stopPropagation(); goPrev();
-});
-document.getElementById("tap-next").addEventListener("click", function(e) {
-  e.preventDefault(); e.stopPropagation(); goNext();
-});
-document.getElementById("tap-prev").addEventListener("touchend", function(e) {
-  e.preventDefault(); goPrev();
-});
-document.getElementById("tap-next").addEventListener("touchend", function(e) {
-  e.preventDefault(); goNext();
-});
+// Maps a friendly color name to a CSS color for annotations.
+function colorFor(c) {
+  switch (c) {
+    case 'yellow': return '#ffeb3b';
+    case 'green': return '#a5d6a7';
+    case 'blue': return '#90caf9';
+    case 'pink': return '#f48fb1';
+    case 'orange': return '#ffcc80';
+    default: return '#ffeb3b';
+  }
+}
+
+function notifyAnnotationTap(id) {
+  try { window.flutter_inappwebview.callHandler("onAnnotationTap", id); } catch (e) {}
+}
+
+// Add (or re-add) an annotation overlay. type is 'highlight' or 'note'.
+function addAnnotation(id, cfiRange, type, color) {
+  if (!rendition || !cfiRange) return;
+  var fill = colorFor(color);
+  try {
+    if (type === "note") {
+      rendition.annotations.underline(
+        cfiRange, { id: id },
+        function () { notifyAnnotationTap(id); },
+        "annot-" + id,
+        { "stroke": fill, "stroke-opacity": "0.95", "stroke-width": "2" });
+    } else {
+      rendition.annotations.highlight(
+        cfiRange, { id: id },
+        function () { notifyAnnotationTap(id); },
+        "annot-" + id,
+        { "fill": fill, "fill-opacity": "0.35" });
+    }
+  } catch (e) {}
+}
+
+function removeAnnotation(cfiRange, type) {
+  if (!rendition || !cfiRange) return;
+  try {
+    rendition.annotations.remove(cfiRange, type === "note" ? "underline" : "highlight");
+  } catch (e) {}
+}
+
+// Clear the current text selection across all loaded iframes.
+function clearSelection() {
+  if (!rendition) return;
+  var cs = rendition.getContents();
+  for (var i = 0; i < cs.length; i++) {
+    try { cs[i].window.getSelection().removeAllRanges(); } catch (e) {}
+  }
+}
 
 function loadBook(base64Data) {
   try {
@@ -95,12 +124,30 @@ function loadBook(base64Data) {
       } catch(e) {}
     });
 
+    // Text selection -> hand the cfi range + selected text to Flutter,
+    // which shows the highlight/note action menu.
+    rendition.on("selected", function(cfiRange, contents) {
+      book.getRange(cfiRange).then(function(range) {
+        var text = range ? range.toString() : "";
+        try {
+          window.flutter_inappwebview.callHandler("onTextSelected", cfiRange, text);
+        } catch (e) {}
+      }).catch(function() {
+        try {
+          window.flutter_inappwebview.callHandler("onTextSelected", cfiRange, "");
+        } catch (e) {}
+      });
+    });
+
     // Inject theme + font size CSS into every iframe content load.
     // Uses !important to override any inline styles from the EPUB.
     rendition.hooks.content.register(function(contents) {
       injectStyles(contents);
-      // Tap handler for middle area
+      // Tap-to-turn: left 30% = prev, right 30% = next.
+      // Skip navigation when the user is selecting text (for highlights/notes).
       contents.document.addEventListener("click", function(e) {
+        var sel = contents.window.getSelection();
+        if (sel && sel.toString().length > 0) return;
         var iframeWidth = contents.document.documentElement.clientWidth;
         var x = e.clientX;
         if (x < iframeWidth * 0.3) { goPrev(); }

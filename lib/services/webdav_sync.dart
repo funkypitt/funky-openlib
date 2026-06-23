@@ -339,8 +339,9 @@ class WebDavSyncService {
 
       // Process all local positions
       for (final lp in localPositions) {
-        final fileName = lp['fileName']!;
-        final localPos = lp['position']!;
+        final fileName = lp['fileName'] as String;
+        final localPos = lp['position'] as String;
+        final localProgress = lp['progress'];
         final localTimestamp = localTimestamps[fileName];
 
         if (remotePositionMap.containsKey(fileName)) {
@@ -354,25 +355,29 @@ class WebDavSyncService {
             if (localDt != null && remoteDt != null && remoteDt.isAfter(localDt)) {
               // Remote wins — update local
               await _database.saveBookState(
-                  fileName, rp['position'] as String);
+                  fileName, rp['position'] as String,
+                  progress: (rp['progress'] as num?)?.toDouble());
               mergedPositions.add(rp);
             } else {
               // Local wins
               mergedPositions.add({
                 'fileName': fileName,
                 'position': localPos,
+                if (localProgress is num) 'progress': localProgress,
                 'lastModified': localTimestamp,
               });
             }
           } else if (remoteTimestamp != null && localTimestamp == null) {
             // Remote has timestamp, local doesn't — remote wins
-            await _database.saveBookState(fileName, rp['position'] as String);
+            await _database.saveBookState(fileName, rp['position'] as String,
+                progress: (rp['progress'] as num?)?.toDouble());
             mergedPositions.add(rp);
           } else {
             // Local wins (has timestamp or both missing)
             mergedPositions.add({
               'fileName': fileName,
               'position': localPos,
+              if (localProgress is num) 'progress': localProgress,
               'lastModified':
                   localTimestamp ?? DateTime.now().toUtc().toIso8601String(),
             });
@@ -383,6 +388,7 @@ class WebDavSyncService {
           mergedPositions.add({
             'fileName': fileName,
             'position': localPos,
+            if (localProgress is num) 'progress': localProgress,
             'lastModified':
                 localTimestamp ?? DateTime.now().toUtc().toIso8601String(),
           });
@@ -397,7 +403,8 @@ class WebDavSyncService {
             (await _database.getAll())
                 .any((b) => b.getFileName() == fileName);
         if (bookExists) {
-          await _database.saveBookState(fileName, rp['position'] as String);
+          await _database.saveBookState(fileName, rp['position'] as String,
+              progress: (rp['progress'] as num?)?.toDouble());
         }
         mergedPositions.add(rp);
       }
@@ -429,6 +436,19 @@ class WebDavSyncService {
         'openlib_sync.json',
         const JsonEncoder.withIndent('  ').convert(mergedManifest),
       );
+
+      // Step 9.5: Merge per-book annotations (highlights & notes)
+      _emitProgress(SyncProgress(
+        status: SyncStatus.merging,
+        message: 'Merging highlights & notes...',
+        totalItems: totalTransfers,
+        completedItems: totalTransfers,
+      ));
+      try {
+        await _syncAnnotations(client, allLocalBooks);
+      } catch (e) {
+        _logger.error('Annotation sync failed', tag: 'WebDavSync', error: e);
+      }
 
       // Step 10: Save last sync time
       final now = DateTime.now().toIso8601String();
@@ -472,6 +492,99 @@ class WebDavSyncService {
       client.dispose();
       _isSyncing = false;
     }
+  }
+
+  /// Sync per-book annotation files under `<remotePath>/annotations/<fileName>.json`.
+  /// Each file holds the full annotation list (including tombstones); merge is
+  /// done id-by-id with last-updated-wins so deletions propagate across devices.
+  Future<void> _syncAnnotations(
+      WebDavClient client, List<MyBook> localBooks) async {
+    await client.ensureDirectoryExists('${client.remotePath}/annotations');
+
+    final fileNames = <String>{};
+    for (final b in localBooks) {
+      fileNames.add(b.getFileName());
+    }
+    fileNames.addAll(await _database.getBookFileNamesWithAnnotations());
+    try {
+      final remoteFiles =
+          await client.listDirectory('${client.remotePath}/annotations');
+      for (final f in remoteFiles) {
+        if (!f.isDirectory && f.href.endsWith('.json')) {
+          fileNames.add(f.href.substring(0, f.href.length - 5));
+        }
+      }
+    } catch (_) {}
+
+    for (final fileName in fileNames) {
+      try {
+        await _syncAnnotationsForBook(client, fileName);
+      } catch (e) {
+        _logger.error('Annotation sync failed for $fileName',
+            tag: 'WebDavSync', error: e);
+      }
+    }
+  }
+
+  Future<void> _syncAnnotationsForBook(
+      WebDavClient client, String fileName) async {
+    final remotePath = 'annotations/$fileName.json';
+
+    // Remote annotations keyed by id
+    final remoteMap = <String, Annotation>{};
+    try {
+      final json = await client.downloadString(remotePath);
+      if (json != null && json.isNotEmpty) {
+        final decoded = jsonDecode(json) as Map<String, dynamic>;
+        final arr = (decoded['annotations'] as List<dynamic>? ?? []);
+        for (final e in arr) {
+          final a = Annotation.fromMap((e as Map).cast<String, dynamic>());
+          remoteMap[a.id] = a;
+        }
+      }
+    } catch (_) {
+      // Missing/unreadable remote file -> treat as empty
+    }
+
+    final localRaw = await _database.getAllAnnotationsRaw(fileName);
+    final localMap = {for (final a in localRaw) a.id: a};
+
+    if (localMap.isEmpty && remoteMap.isEmpty) return;
+
+    final mergedMap = <String, Annotation>{};
+    final allIds = <String>{...localMap.keys, ...remoteMap.keys};
+    for (final id in allIds) {
+      final local = localMap[id];
+      final remote = remoteMap[id];
+
+      if (local == null) {
+        // Remote-only -> import into local DB
+        mergedMap[id] = remote!;
+        await _database.saveAnnotation(remote);
+      } else if (remote == null) {
+        mergedMap[id] = local;
+      } else {
+        final ld = DateTime.tryParse(local.updatedAt);
+        final rd = DateTime.tryParse(remote.updatedAt);
+        if (ld != null && rd != null && rd.isAfter(ld)) {
+          mergedMap[id] = remote;
+          await _database.saveAnnotation(remote);
+        } else {
+          mergedMap[id] = local;
+        }
+      }
+    }
+
+    final out = {
+      'version': 1,
+      'fileName': fileName,
+      'lastModified': DateTime.now().toUtc().toIso8601String(),
+      'annotations': mergedMap.values.map((a) => a.toMap()).toList(),
+    };
+    await client.uploadString(
+      remotePath,
+      const JsonEncoder.withIndent('  ').convert(out),
+    );
   }
 
   void dispose() {
