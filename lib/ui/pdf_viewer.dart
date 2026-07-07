@@ -13,6 +13,7 @@ import 'package:openlibe_eink_remix/services/platform_utils.dart';
 import 'package:openlibe_eink_remix/ui/components/snack_bar_widget.dart';
 
 import 'package:openlibe_eink_remix/services/database.dart' show MyLibraryDb;
+import 'package:openlibe_eink_remix/services/reading_widget_service.dart';
 import 'package:openlibe_eink_remix/state/state.dart'
     show
         filePathProvider,
@@ -110,6 +111,8 @@ class _PdfViewerState extends ConsumerState<PdfViewer> {
   @override
   void initState() {
     super.initState();
+    // Mark this book as the one shown on the home-screen widget.
+    ReadingWidgetService.updateFromReading(widget.fileName);
   }
 
   @override
@@ -214,6 +217,10 @@ class _PdfViewerState extends ConsumerState<PdfViewer> {
                       // Save position on every page change
                       MyLibraryDb.instance.saveBookState(
                           widget.fileName, (page ?? 0).toString());
+                      ReadingWidgetService.updateFromReading(widget.fileName,
+                          progress: (total ?? 0) > 0
+                              ? ((page ?? 0) + 1) / total!
+                              : null);
                     },
                   ),
                 );
@@ -234,6 +241,10 @@ class _PdfViewerState extends ConsumerState<PdfViewer> {
                       // Save position on every page change
                       MyLibraryDb.instance.saveBookState(
                           widget.fileName, (page ?? 0).toString());
+                      ReadingWidgetService.updateFromReading(widget.fileName,
+                          progress: (total ?? 0) > 0
+                              ? ((page ?? 0) + 1) / total!
+                              : null);
                     },
                   ),
                 );

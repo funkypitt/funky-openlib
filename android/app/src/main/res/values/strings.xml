@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_no_book">No book open yet — tap to start reading</string>
+    <string name="widget_description">Shows the book you are currently reading. Tap to continue where you left off.</string>
+    <string name="widget_cover_description">Book cover</string>
+</resources>

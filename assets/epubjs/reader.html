@@ -148,10 +148,29 @@ function loadBook(base64Data) {
       contents.document.addEventListener("click", function(e) {
         var sel = contents.window.getSelection();
         if (sel && sel.toString().length > 0) return;
-        var iframeWidth = contents.document.documentElement.clientWidth;
+        // Don't hijack taps on links (footnotes, internal navigation).
+        var t = e.target;
+        while (t && t.tagName) {
+          if (t.tagName.toLowerCase() === "a" && t.getAttribute("href")) return;
+          t = t.parentNode;
+        }
+        // In paginated mode the iframe spans the WHOLE chapter (all columns)
+        // and epub.js translates it horizontally, so e.clientX is
+        // chapter-relative: on page 2+ it exceeds the screen width, which made
+        // right-side taps never land in the "next" zone (and early-chapter taps
+        // always land in "prev"). Convert to on-screen coordinates using the
+        // iframe's current position in the outer document.
         var x = e.clientX;
-        if (x < iframeWidth * 0.3) { goPrev(); }
-        else if (x > iframeWidth * 0.7) { goNext(); }
+        try {
+          var frame = contents.window.frameElement;
+          if (frame) x += frame.getBoundingClientRect().left;
+        } catch (err) {}
+        var screenW = window.innerWidth;
+        // Safety net if the frame rect was unavailable: fold the
+        // chapter-relative coordinate back onto the visible page.
+        if (x < 0 || x > screenW) x = ((x % screenW) + screenW) % screenW;
+        if (x < screenW * 0.3) { goPrev(); }
+        else if (x > screenW * 0.7) { goNext(); }
       });
     });
 

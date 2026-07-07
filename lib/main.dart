@@ -1,4 +1,5 @@
 // Dart imports:
+import 'dart:async' show StreamSubscription;
 import 'dart:io' show Platform;
 
 // Flutter imports:
@@ -9,6 +10,7 @@ import 'package:flutter/rendering.dart'; // <-- REQUIRED
 // Package imports:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:openlibe_eink_remix/ui/home_page.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
@@ -17,7 +19,10 @@ import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:openlibe_eink_remix/services/database.dart' show MyLibraryDb;
 import 'package:openlibe_eink_remix/services/platform_utils.dart';
 import 'package:openlibe_eink_remix/services/update_checker.dart';
+import 'package:openlibe_eink_remix/ui/epub_viewer.dart'
+    show launchEpubViewer;
 import 'package:openlibe_eink_remix/ui/mylibrary_page.dart';
+import 'package:openlibe_eink_remix/ui/pdf_viewer.dart' show launchPdfViewer;
 import 'package:openlibe_eink_remix/ui/search_page.dart';
 import 'package:openlibe_eink_remix/ui/settings_page.dart';
 import 'package:openlibe_eink_remix/ui/themes.dart';
@@ -263,6 +268,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   ];
 
   bool _showExpandedHeader = true; // <-- ONLY new state
+  StreamSubscription<Uri?>? _widgetClickSubscription;
 
   @override
   void initState() {
@@ -285,6 +291,38 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _autoSyncOnStartup();
     });
+    // Home-screen widget: open the tapped book (Android only)
+    if (Platform.isAndroid) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _setupWidgetLaunchHandling();
+      });
+    }
+  }
+
+  void _setupWidgetLaunchHandling() {
+    // Cold start from a widget tap
+    HomeWidget.initiallyLaunchedFromHomeWidget().then(_handleWidgetLaunch);
+    // Widget tap while the app is alive in the background
+    _widgetClickSubscription =
+        HomeWidget.widgetClicked.listen(_handleWidgetLaunch);
+  }
+
+  Future<void> _handleWidgetLaunch(Uri? uri) async {
+    if (!mounted || uri == null || uri.host != 'open') return;
+    final fileName = uri.queryParameters['file'];
+    if (fileName == null || fileName.isEmpty) return;
+    if (fileName.toLowerCase().endsWith('.pdf')) {
+      await launchPdfViewer(fileName: fileName, context: context, ref: ref);
+    } else {
+      // The epub viewer restores the saved reading position itself.
+      await launchEpubViewer(fileName: fileName, context: context, ref: ref);
+    }
+  }
+
+  @override
+  void dispose() {
+    _widgetClickSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _autoRankInstancesOnStartup() async {

@@ -302,6 +302,23 @@ class MyLibraryDb {
     return listMapToMyBook(maps);
   }
 
+  /// Look up a library book by its on-disk file name. Falls back to matching
+  /// the id (older entries store files as "<id>.<format>" without fileName).
+  Future<MyBook?> getBookByFileName(String fileName) async {
+    final dbInstance = await instance.database;
+    List<Map<String, dynamic>> data = await dbInstance
+        .query(tableName, where: 'fileName = ?', whereArgs: [fileName]);
+    if (data.isEmpty) {
+      final id = fileName.contains('.')
+          ? fileName.substring(0, fileName.lastIndexOf('.'))
+          : fileName;
+      data =
+          await dbInstance.query(tableName, where: 'id = ?', whereArgs: [id]);
+    }
+    final books = listMapToMyBook(data);
+    return books.isNotEmpty ? books.first : null;
+  }
+
   List<MyBook> listMapToMyBook(List<Map<String, dynamic>> maps) {
     List<MyBook> myBookList = List.generate(maps.length, (i) {
       return MyBook(

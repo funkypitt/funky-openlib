@@ -22,6 +22,7 @@ import 'package:openlibe_eink_remix/state/state.dart'
         epubReaderFontSizeProvider;
 import 'package:openlibe_eink_remix/services/database.dart' show MyLibraryDb;
 import 'package:openlibe_eink_remix/services/platform_utils.dart';
+import 'package:openlibe_eink_remix/services/reading_widget_service.dart';
 import 'package:openlibe_eink_remix/ui/components/reader_help_overlay.dart';
 import 'package:openlibe_eink_remix/ui/epub_page_viewer.dart';
 
@@ -141,6 +142,9 @@ class _EpubScrollViewerState extends ConsumerState<EpubScrollViewer> {
       document: EpubDocument.openFile(File(widget.filePath)),
     );
 
+    // Mark this book as the one shown on the home-screen widget.
+    ReadingWidgetService.updateFromReading(widget.fileName);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkTutorial();
       _focusNode.requestFocus();
@@ -242,6 +246,7 @@ class _EpubScrollViewerState extends ConsumerState<EpubScrollViewer> {
                     if (cfi != null && cfi.isNotEmpty) {
                       MyLibraryDb.instance
                           .saveBookState(widget.fileName, cfi);
+                      ReadingWidgetService.updateFromReading(widget.fileName);
                     }
                   },
                   builders: EpubViewBuilders<DefaultBuilderOptions>(

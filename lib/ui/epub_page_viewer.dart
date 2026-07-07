@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openlibe_eink_remix/services/epub_assets.dart';
 import 'package:openlibe_eink_remix/services/database.dart'
     show MyLibraryDb, Annotation;
+import 'package:openlibe_eink_remix/services/reading_widget_service.dart';
 import 'package:openlibe_eink_remix/state/state.dart'
     show
         getBookPosition,
@@ -83,6 +84,8 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
   void initState() {
     super.initState();
     _loadSavedPosition();
+    // Mark this book as the one shown on the home-screen widget.
+    ReadingWidgetService.updateFromReading(widget.fileName);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
@@ -725,6 +728,9 @@ class _EpubPageViewerState extends ConsumerState<EpubPageViewer> {
                               // Save position (+ progress) to DB on every relocation
                               MyLibraryDb.instance.saveBookState(
                                   widget.fileName, cfi,
+                                  progress: progress);
+                              ReadingWidgetService.updateFromReading(
+                                  widget.fileName,
                                   progress: progress);
                             }
                           }
