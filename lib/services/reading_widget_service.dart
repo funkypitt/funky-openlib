@@ -76,9 +76,16 @@ class ReadingWidgetService {
   }
 
   /// Download the cover once and cache it, so the widget (a RemoteViews on
-  /// the launcher side) can load it from a local file path.
+  /// the launcher side) can load it from a local file path. Covers extracted
+  /// from book files are already local paths and are used as-is.
   static Future<String?> _ensureCoverFile(String url) async {
     try {
+      if (url.startsWith('/') || url.startsWith('file://')) {
+        final path = url.startsWith('file://')
+            ? url.substring('file://'.length)
+            : url;
+        return await File(path).exists() ? path : null;
+      }
       final dir = await getApplicationSupportDirectory();
       final coversDir = Directory(p.join(dir.path, 'widget_covers'));
       final file = File(

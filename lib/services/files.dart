@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 // Project imports:
+import 'package:openlibe_eink_remix/services/book_metadata.dart';
 import 'package:openlibe_eink_remix/services/database.dart';
 import 'package:openlibe_eink_remix/state/state.dart' show myLibraryProvider;
 
@@ -253,40 +254,45 @@ Future<int> syncLibraryWithDisk() async {
       }
     }
 
-    // Add new files that are not in database (only for legacy md5.format named files)
+    // Add new files that are not in database. The id is the file's content
+    // MD5 (same convention as Anna's Archive ids and the WebDAV adoption),
+    // so a copy of a book already in the library replaces its entry instead
+    // of duplicating it. Metadata and cover come from the file itself.
     final existingFileNames = booksInDb.map((b) => b.getFileName()).toSet();
+    final existingIds = booksInDb.map((b) => b.id).toSet();
     for (var fileName in filesOnDisk) {
       if (!existingFileNames.contains(fileName)) {
         final parts = fileName.split('.');
         if (parts.length >= 2) {
           final extension = parts.last.toLowerCase();
-          // Try to extract md5 from filename (either pure md5 or as suffix after last underscore)
-          String md5 = parts.sublist(0, parts.length - 1).join('.');
+          final filePath = '$bookStorageDirectory/$fileName';
 
-          // For new format files, try to extract md5 suffix
-          if (md5.contains('_')) {
-            final lastUnderscore = md5.lastIndexOf('_');
-            final possibleMd5 = md5.substring(lastUnderscore + 1);
-            // MD5 is 32 characters, but we only store 8 in the filename
-            if (possibleMd5.length == 8) {
-              md5 = possibleMd5;
-            }
+          String id;
+          try {
+            id = await computeFileMd5(filePath);
+          } catch (_) {
+            continue;
+          }
+          if (existingIds.contains(id)) {
+            // Same content already in the library under another file name
+            continue;
           }
 
-          // Create a minimal book entry for the new file
+          final meta = await extractEpubMetadata(filePath, coverKey: id);
           final book = MyBook(
-            id: md5,
-            title: md5,
-            author: "Unknown",
-            thumbnail: "",
+            id: id,
+            title: meta?.title ?? titleFromFileName(fileName),
+            author: meta?.author ?? "Unknown",
+            thumbnail: meta?.coverPath ?? "",
             link: "",
-            publisher: "",
+            publisher: meta?.publisher ?? "",
             info: "",
-            description: "",
+            description: meta?.description ?? "",
             format: extension,
             fileName: fileName,
           );
           await dataBase.insert(book);
+          existingIds.add(id);
           changes++;
         }
       }

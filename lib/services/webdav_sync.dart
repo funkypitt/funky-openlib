@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:math';
 
 // Project imports:
+import 'package:openlibe_eink_remix/services/book_metadata.dart';
 import 'package:openlibe_eink_remix/services/database.dart';
 import 'package:openlibe_eink_remix/services/logger.dart';
 import 'package:openlibe_eink_remix/services/webdav_client.dart';
@@ -226,6 +227,22 @@ class WebDavSyncService {
         };
       }
 
+      // Step 3.5: Names of external files known to duplicate library books —
+      // kept both locally and in the manifest so no device downloads them
+      // again. Merged from both sources.
+      final ignoredExternal = await _loadLocalIgnoredExternalFiles();
+      ignoredExternal.addAll(
+          ((remoteManifest['ignoredExternalFiles'] as List<dynamic>?) ?? [])
+              .cast<String>());
+
+      final bookStorageDir =
+          await _database.getPreference('bookStorageDirectory') as String;
+
+      // Step 3.7: One-time repair for libraries hit by the v1.3.1 adoption
+      // bug: drop entries that are byte-identical copies of existing books
+      // and backfill covers/metadata from the book files themselves.
+      await _cleanupLibraryOnce(bookStorageDir, ignoredExternal);
+
       // Step 4: Diff local vs remote
       final localBooks = await _database.getAll();
       final localPositions = await _database.getAllBookPositions();
@@ -242,20 +259,31 @@ class WebDavSyncService {
       final remoteBookIds = remoteBooks.map((b) => b['id'] as String).toSet();
       final localBookIds = localBooks.map((b) => b.id).toSet();
 
+      String manifestFileNameOf(Map<String, dynamic> b) =>
+          b['fileName'] as String? ?? '${b['id']}.${b['format']}';
+
+      final localFileNamesLower =
+          localBooks.map((b) => b.getFileName().toLowerCase()).toSet();
+
       final booksToUpload =
           localBooks.where((b) => !remoteBookIds.contains(b.id)).toList();
-      final booksToDownload =
-          remoteBooks.where((b) => !localBookIds.contains(b['id'])).toList();
+      // A manifest entry is only downloaded if neither its id nor its file
+      // name is known locally — the same file must never be imported twice
+      // just because two devices assigned it different ids.
+      final booksToDownload = remoteBooks.where((b) {
+        if (localBookIds.contains(b['id'])) return false;
+        return !localFileNamesLower
+            .contains(manifestFileNameOf(b).toLowerCase());
+      }).toList();
 
       // Step 4.5: Adopt external books present in the remote books/ folder
       // but absent from the manifest (e.g. dropped there by another app or
-      // a browser extension). They get filename-derived metadata and join
-      // the regular download flow, so the rebuilt manifest picks them up.
-      final manifestFileNames = remoteBooks
-          .map((b) =>
-              b['fileName'] as String? ?? '${b['id']}.${b['format']}')
-          .toSet();
-      final localFileNames = localBooks.map((b) => b.getFileName()).toSet();
+      // a browser extension). They are downloaded to a temp file first and
+      // only join the library if their content is not already in it.
+      final manifestFileNamesLower =
+          remoteBooks.map((b) => manifestFileNameOf(b).toLowerCase()).toSet();
+      final ignoredExternalLower =
+          ignoredExternal.map((n) => n.toLowerCase()).toSet();
       try {
         final remoteFiles =
             await client.listDirectory('${client.remotePath}/books');
@@ -265,19 +293,21 @@ class WebDavSyncService {
           final name = f.href;
           final lower = name.toLowerCase();
           if (!bookExtensions.any(lower.endsWith)) continue;
-          if (manifestFileNames.contains(name) ||
-              localFileNames.contains(name)) {
+          if (manifestFileNamesLower.contains(lower) ||
+              localFileNamesLower.contains(lower) ||
+              ignoredExternalLower.contains(lower)) {
             continue;
           }
           final dot = name.lastIndexOf('.');
-          final baseName = name.substring(0, dot);
-          if (localBookIds.contains(baseName)) continue;
           booksToDownload.add({
-            'id': baseName,
-            'title': baseName.replaceAll('_', ' '),
+            // Provisional id — replaced by the file's content MD5 once
+            // downloaded, so identical files converge across devices.
+            'id': name.substring(0, dot),
+            'title': titleFromFileName(name),
             'format': lower.substring(dot + 1),
             'fileName': name,
             'link': '',
+            'adopted': true,
           });
           _logger.info('Adopting external book from server: $name',
               tag: 'WebDavSync');
@@ -289,10 +319,6 @@ class WebDavSyncService {
 
       final totalTransfers = booksToUpload.length + booksToDownload.length;
       var completedTransfers = 0;
-
-      // Step 5: Get book storage directory
-      final bookStorageDir =
-          await _database.getPreference('bookStorageDirectory') as String;
 
       // Step 6: Upload local-only books
       final List<String> failedUploads = [];
@@ -325,6 +351,8 @@ class WebDavSyncService {
 
       // Step 7: Download remote-only books
       final List<String> failedDownloads = [];
+      var skippedDuplicates = 0;
+      final adoptedHashes = <String>{};
       for (final remoteBook in booksToDownload) {
         final title = remoteBook['title'] as String? ?? 'Unknown';
         _emitProgress(SyncProgress(
@@ -335,29 +363,98 @@ class WebDavSyncService {
         ));
 
         try {
-          final fileName = remoteBook['fileName'] as String? ??
-              '${remoteBook['id']}.${remoteBook['format']}';
+          final fileName = manifestFileNameOf(remoteBook);
           final localPath = '$bookStorageDir/$fileName';
+          final adopted = remoteBook['adopted'] == true;
 
-          // Encode the segment: adopted external filenames may contain
-          // characters that are invalid in a raw URL path ('#', '?', ...)
-          await client.downloadFile(
-              'books/${Uri.encodeComponent(fileName)}', localPath);
+          if (adopted) {
+            // Download to a temp file first: if the content turns out to be
+            // a book we already have under another file name, leave the
+            // library untouched and remember the name so it is never
+            // downloaded again (on any device).
+            final tmpPath = '$bookStorageDir/.openlib_sync_download.tmp';
+            await client.downloadFile(
+                'books/${Uri.encodeComponent(fileName)}', tmpPath);
+            final hash = await computeFileMd5(tmpPath);
+            if (localBookIds.contains(hash) ||
+                adoptedHashes.contains(hash) ||
+                await _matchesExistingFile(
+                    hash, tmpPath, localBooks, bookStorageDir)) {
+              try {
+                await File(tmpPath).delete();
+              } catch (_) {}
+              ignoredExternal.add(fileName);
+              skippedDuplicates++;
+              _logger.info(
+                  'External file is a copy of an existing book, skipping: $fileName',
+                  tag: 'WebDavSync');
+            } else {
+              await File(tmpPath).rename(localPath);
+              adoptedHashes.add(hash);
+              // Real metadata and cover come from the book file itself;
+              // the file name is only the fallback.
+              final meta = await extractEpubMetadata(localPath,
+                  coverKey: _coverKey(hash));
+              await _database.insert(MyBook(
+                id: hash,
+                title: meta?.title ?? title,
+                author: meta?.author,
+                thumbnail: meta?.coverPath,
+                link: '',
+                publisher: meta?.publisher,
+                info: null,
+                format: remoteBook['format'] as String?,
+                description: meta?.description,
+                fileName: fileName,
+              ));
+              _logger.info('Adopted: ${meta?.title ?? title}',
+                  tag: 'WebDavSync');
+            }
+          } else {
+            // Encode the segment: file names may contain characters that
+            // are invalid in a raw URL path ('#', '?', spaces, ...)
+            await client.downloadFile(
+                'books/${Uri.encodeComponent(fileName)}', localPath);
 
-          await _database.insert(MyBook(
-            id: remoteBook['id'] as String,
-            title: title,
-            author: remoteBook['author'] as String?,
-            thumbnail: remoteBook['thumbnail'] as String?,
-            link: remoteBook['link'] as String? ?? '',
-            publisher: remoteBook['publisher'] as String?,
-            info: remoteBook['info'] as String?,
-            format: remoteBook['format'] as String?,
-            description: remoteBook['description'] as String?,
-            fileName: fileName,
-          ));
+            var bookTitle = title;
+            var author = remoteBook['author'] as String?;
+            var thumbnail = remoteBook['thumbnail'] as String?;
+            var publisher = remoteBook['publisher'] as String?;
+            var description = remoteBook['description'] as String?;
+            if (thumbnail == null || thumbnail.isEmpty) {
+              // No cover URL (book was adopted from an external file on
+              // another device) — extract the cover and any missing fields
+              // from the downloaded file.
+              final meta = await extractEpubMetadata(localPath,
+                  coverKey: _coverKey(remoteBook['id'] as String));
+              if (meta != null) {
+                thumbnail = meta.coverPath;
+                if (author == null || author.isEmpty) author = meta.author;
+                if (publisher == null || publisher.isEmpty) {
+                  publisher = meta.publisher;
+                }
+                if (description == null || description.isEmpty) {
+                  description = meta.description;
+                }
+                if (bookTitle == 'Unknown') bookTitle = meta.title ?? bookTitle;
+              }
+            }
 
-          _logger.info('Downloaded: $title', tag: 'WebDavSync');
+            await _database.insert(MyBook(
+              id: remoteBook['id'] as String,
+              title: bookTitle,
+              author: author,
+              thumbnail: thumbnail,
+              link: remoteBook['link'] as String? ?? '',
+              publisher: publisher,
+              info: remoteBook['info'] as String?,
+              format: remoteBook['format'] as String?,
+              description: description,
+              fileName: fileName,
+            ));
+
+            _logger.info('Downloaded: $title', tag: 'WebDavSync');
+          }
         } catch (e) {
           failedDownloads.add(title);
           _logger.error('Failed to download: $title',
@@ -365,6 +462,9 @@ class WebDavSyncService {
         }
         completedTransfers++;
       }
+
+      // Persist the ignore list so skipped duplicates stay skipped.
+      await _saveLocalIgnoredExternalFiles(ignoredExternal);
 
       // Step 8: Merge reading positions
       _emitProgress(SyncProgress(
@@ -464,7 +564,9 @@ class WebDavSyncService {
                   'id': b.id,
                   'title': b.title,
                   'author': b.author,
-                  'thumbnail': b.thumbnail,
+                  // Covers extracted from book files are local paths that
+                  // mean nothing to other devices — they re-extract locally.
+                  'thumbnail': _isLocalPath(b.thumbnail) ? null : b.thumbnail,
                   'link': b.link,
                   'publisher': b.publisher,
                   'info': b.info,
@@ -474,6 +576,7 @@ class WebDavSyncService {
                 })
             .toList(),
         'positions': mergedPositions,
+        'ignoredExternalFiles': (ignoredExternal.toList()..sort()),
       };
 
       await client.uploadString(
@@ -500,10 +603,14 @@ class WebDavSyncService {
 
       final failures = [...failedUploads, ...failedDownloads];
       if (failures.isEmpty) {
+        final downloadedCount = booksToDownload.length - skippedDuplicates;
+        final dupNote = skippedDuplicates > 0
+            ? ', $skippedDuplicates duplicate(s) skipped'
+            : '';
         _emitProgress(SyncProgress(
           status: SyncStatus.completed,
           message:
-              'Sync complete: ${booksToUpload.length} uploaded, ${booksToDownload.length} downloaded',
+              'Sync complete: ${booksToUpload.length} uploaded, $downloadedCount downloaded$dupNote',
           totalItems: totalTransfers,
           completedItems: totalTransfers,
         ));
@@ -535,6 +642,125 @@ class WebDavSyncService {
     } finally {
       client.dispose();
       _isSyncing = false;
+    }
+  }
+
+  /// External file names known to duplicate existing library books.
+  Future<Set<String>> _loadLocalIgnoredExternalFiles() async {
+    try {
+      final json =
+          await _database.getPreference('syncIgnoredExternalFiles') as String;
+      return (jsonDecode(json) as List<dynamic>).cast<String>().toSet();
+    } catch (_) {
+      return <String>{};
+    }
+  }
+
+  Future<void> _saveLocalIgnoredExternalFiles(Set<String> names) async {
+    await _database.savePreference(
+        'syncIgnoredExternalFiles', jsonEncode(names.toList()..sort()));
+  }
+
+  static bool _isLocalPath(String? thumbnail) =>
+      thumbnail != null &&
+      (thumbnail.startsWith('/') || thumbnail.startsWith('file://'));
+
+  /// File-system-safe name for a cover image derived from a book id.
+  static String _coverKey(String id) =>
+      id.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+
+  /// True if the downloaded temp file is byte-identical to any book file
+  /// already in the library (size compared first, MD5 only on size match).
+  Future<bool> _matchesExistingFile(String hash, String tmpPath,
+      List<MyBook> localBooks, String bookStorageDir) async {
+    final size = await File(tmpPath).length();
+    for (final book in localBooks) {
+      try {
+        final file = File('$bookStorageDir/${book.getFileName()}');
+        if (await file.exists() && await file.length() == size) {
+          if (await computeFileMd5(file.path) == hash) return true;
+        }
+      } catch (_) {}
+    }
+    return false;
+  }
+
+  /// One-time library repair after the v1.3.1 adoption bug: entries without
+  /// a source link whose file content is identical to another library book
+  /// are duplicates created by the old filename-only adoption — remove them
+  /// (row + file copy) and ignore their remote file from now on. Remaining
+  /// entries missing covers/metadata are backfilled from the epub itself.
+  Future<void> _cleanupLibraryOnce(
+      String bookStorageDir, Set<String> ignoredExternal) async {
+    try {
+      final done = await _database.getPreference('libraryDedupePassV1');
+      if (done.toString() == '1') return;
+    } catch (_) {
+      // Preference missing — pass has not run yet.
+    }
+    try {
+      final books = await _database.getAll();
+      final booksById = {for (final b in books) b.id: b};
+      for (final book in books) {
+        final fileName = book.getFileName();
+        final file = File('$bookStorageDir/$fileName');
+        if (!await file.exists()) continue;
+
+        if (book.link.isEmpty) {
+          String? hash;
+          try {
+            hash = await computeFileMd5(file.path);
+          } catch (_) {}
+          final original = hash != null ? booksById[hash] : null;
+          if (original != null && original.id != book.id) {
+            await _database.delete(book.id);
+            await _database.deleteBookState(fileName);
+            try {
+              await file.delete();
+            } catch (_) {}
+            ignoredExternal.add(fileName);
+            _logger.info('Removed duplicate library entry: ${book.title}',
+                tag: 'WebDavSync');
+            continue;
+          }
+        }
+
+        final missingCover =
+            book.thumbnail == null || book.thumbnail!.isEmpty;
+        final missingAuthor = book.author == null ||
+            book.author!.isEmpty ||
+            book.author == 'Unknown';
+        if (missingCover || missingAuthor) {
+          final meta = await extractEpubMetadata(file.path,
+              coverKey: _coverKey(book.id));
+          if (meta == null) continue;
+          // Entries without a source link got their title from the file
+          // name — the epub's own title is more trustworthy there.
+          final preferFileTitle = book.link.isEmpty;
+          await _database.insert(MyBook(
+            id: book.id,
+            title: preferFileTitle ? (meta.title ?? book.title) : book.title,
+            author: missingAuthor ? (meta.author ?? book.author) : book.author,
+            thumbnail:
+                missingCover ? (meta.coverPath ?? book.thumbnail) : book.thumbnail,
+            link: book.link,
+            publisher: (book.publisher == null || book.publisher!.isEmpty)
+                ? (meta.publisher ?? book.publisher)
+                : book.publisher,
+            info: book.info,
+            format: book.format,
+            description: (book.description == null || book.description!.isEmpty)
+                ? (meta.description ?? book.description)
+                : book.description,
+            fileName: book.fileName,
+          ));
+          _logger.info('Backfilled metadata for: ${book.title}',
+              tag: 'WebDavSync');
+        }
+      }
+      await _database.savePreference('libraryDedupePassV1', '1');
+    } catch (e) {
+      _logger.error('Library cleanup failed', tag: 'WebDavSync', error: e);
     }
   }
 

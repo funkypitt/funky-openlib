@@ -147,20 +147,17 @@ class WebDavClient {
   List<WebDavRemoteFile> _parsePropfindResponse(
       String xml, String requestPath) {
     final document = XmlDocument.parse(xml);
-    final responses = document.findAllElements('d:response').toList();
-    if (responses.isEmpty) {
-      // Try without namespace prefix
-      responses.addAll(document.findAllElements('response'));
-    }
+    // Match by local name regardless of the server's namespace prefix
+    // (Nextcloud uses d:, Apache mod_dav uses D:, others use none).
+    final responses =
+        document.findAllElements('response', namespace: '*').toList();
 
     final files = <WebDavRemoteFile>[];
     final normalizedRequestPath = Uri.decodeFull(requestPath)
         .replaceAll(RegExp(r'/+$'), '');
 
     for (final response in responses) {
-      final hrefElements =
-          response.findAllElements('d:href').followedBy(
-              response.findAllElements('href'));
+      final hrefElements = response.findAllElements('href', namespace: '*');
       if (hrefElements.isEmpty) continue;
 
       final href = Uri.decodeFull(hrefElements.first.innerText.trim());
@@ -172,31 +169,28 @@ class WebDavClient {
         continue;
       }
 
-      final propstat = response.findAllElements('d:propstat').followedBy(
-          response.findAllElements('propstat'));
+      final propstat =
+          response.findAllElements('propstat', namespace: '*');
       String? lastModified;
       int? contentLength;
       bool isDirectory = href.endsWith('/');
 
       for (final ps in propstat) {
-        final props = ps.findAllElements('d:prop').followedBy(
-            ps.findAllElements('prop'));
+        final props = ps.findAllElements('prop', namespace: '*');
         for (final prop in props) {
-          final lm = prop.findAllElements('d:getlastmodified').followedBy(
-              prop.findAllElements('getlastmodified'));
+          final lm =
+              prop.findAllElements('getlastmodified', namespace: '*');
           if (lm.isNotEmpty) lastModified = lm.first.innerText.trim();
 
-          final cl = prop.findAllElements('d:getcontentlength').followedBy(
-              prop.findAllElements('getcontentlength'));
+          final cl =
+              prop.findAllElements('getcontentlength', namespace: '*');
           if (cl.isNotEmpty) {
             contentLength = int.tryParse(cl.first.innerText.trim());
           }
 
-          final rt = prop.findAllElements('d:resourcetype').followedBy(
-              prop.findAllElements('resourcetype'));
+          final rt = prop.findAllElements('resourcetype', namespace: '*');
           for (final r in rt) {
-            if (r.findAllElements('d:collection').isNotEmpty ||
-                r.findAllElements('collection').isNotEmpty) {
+            if (r.findAllElements('collection', namespace: '*').isNotEmpty) {
               isDirectory = true;
             }
           }

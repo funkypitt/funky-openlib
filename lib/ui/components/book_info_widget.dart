@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:openlibe_eink_remix/services/instance_manager.dart';
+import 'package:openlibe_eink_remix/ui/components/book_cover_image.dart';
 
 class BookInfoWidget extends StatelessWidget {
   /// Returns the current fastest Anna's Archive domain for the given md5.
@@ -39,40 +39,12 @@ class BookInfoWidget extends StatelessWidget {
               height: 30,
             ),
             Center(
-              child: CachedNetworkImage(
+              child: BookCoverImage(
+                source: data.thumbnail as String?,
                 height: 230,
                 width: 170,
-                imageUrl: data.thumbnail,
-                imageBuilder: (context, imageProvider) => Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    image: DecorationImage(
-                      image: imageProvider,
-                      fit: BoxFit.fill,
-                    ),
-                  ),
-                ),
-                placeholder: (context, url) => Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.grey,
-                  ),
-                  height: 230,
-                  width: 170,
-                ),
-                errorWidget: (context, url, error) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.grey,
-                    ),
-                    height: 230,
-                    width: 170,
-                    child: const Center(
-                      child: Icon(Icons.image_rounded),
-                    ),
-                  );
-                },
+                borderRadius: 10,
+                placeholderColor: Colors.grey,
               ),
             ),
             // Title row with AA button inline

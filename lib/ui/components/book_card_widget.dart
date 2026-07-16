@@ -2,12 +2,12 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Project imports:
 import 'package:openlibe_eink_remix/state/state.dart'
     show checkIdExists, languageCodeToDisplay, bookProgressProvider;
+import 'package:openlibe_eink_remix/ui/components/book_cover_image.dart';
 import 'package:openlibe_eink_remix/ui/extensions.dart';
 
 // Extract file type from book info string
@@ -103,40 +103,12 @@ class BookInfoCard extends ConsumerWidget {
             // Book thumbnail with download indicator
             Stack(
               children: [
-                CachedNetworkImage(
+                BookCoverImage(
+                  source: thumbnail,
                   height: 120,
                   width: 90,
-                  imageUrl: thumbnail ?? "",
-                  imageBuilder: (context, imageProvider) => Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.all(Radius.circular(5)),
-                      image: DecorationImage(
-                        image: imageProvider,
-                        fit: BoxFit.fill,
-                      ),
-                    ),
-                  ),
-                  placeholder: (context, url) => Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5),
-                      color: "#F8C0C8".toColor(),
-                    ),
-                    height: 120,
-                    width: 90,
-                  ),
-                  errorWidget: (context, url, error) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5),
-                        color: "#F8C0C8".toColor(),
-                      ),
-                      height: 120,
-                      width: 90,
-                      child: const Center(
-                        child: Icon(Icons.image_rounded),
-                      ),
-                    );
-                  },
+                  borderRadius: 5,
+                  placeholderColor: "#F8C0C8".toColor(),
                 ),
                 // Downloaded checkmark indicator
                 if (isDownloaded.valueOrNull == true)
