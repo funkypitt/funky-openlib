@@ -4,6 +4,11 @@ import 'dart:io';
 // Package imports:
 import 'package:crypto/crypto.dart' show md5;
 import 'package:epubx/epubx.dart' as epubx;
+// The lazy content-file refs are not exported from the package root.
+// ignore: implementation_imports
+import 'package:epubx/src/ref_entities/epub_byte_content_file_ref.dart';
+// ignore: implementation_imports
+import 'package:epubx/src/ref_entities/epub_content_file_ref.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -58,32 +63,39 @@ String titleFromFileName(String fileName) {
 /// file. The cover is written to the covers directory as `<coverKey>.<ext>`
 /// and its absolute path returned. Returns null for non-epub files or when
 /// the file cannot be parsed.
+///
+/// Uses the lazy [epubx.EpubReader.openBook] so only the OPF schema and the
+/// cover image are read — a book with one broken content entry (bad internal
+/// href, missing chapter file) still delivers its metadata and cover.
 Future<BookFileMetadata?> extractEpubMetadata(String filePath,
     {required String coverKey}) async {
   if (!filePath.toLowerCase().endsWith('.epub')) return null;
   try {
     final bytes = await File(filePath).readAsBytes();
-    final book = await epubx.EpubReader.readBook(bytes);
+    final book = await epubx.EpubReader.openBook(bytes);
 
     final metadata = book.Schema?.Package?.Metadata;
-    final title = _nonEmpty(book.Title) ??
-        _nonEmpty(metadata?.Titles?.where((t) => t.trim().isNotEmpty).isNotEmpty ==
-                true
-            ? metadata!.Titles!.firstWhere((t) => t.trim().isNotEmpty)
-            : null);
+    String? metadataTitle;
+    for (final t in metadata?.Titles ?? <String>[]) {
+      if (t.trim().isNotEmpty) {
+        metadataTitle = t;
+        break;
+      }
+    }
+    final title = _nonEmpty(book.Title) ?? _nonEmpty(metadataTitle);
     final author = _nonEmpty(book.Author) ??
         _nonEmpty(book.AuthorList?.whereType<String>().join(', '));
-    final publisher = _nonEmpty(
-        metadata?.Publishers?.isNotEmpty == true ? metadata!.Publishers!.first : null);
+    final publisher = _nonEmpty(metadata?.Publishers?.isNotEmpty == true
+        ? metadata!.Publishers!.first
+        : null);
     final description = _nonEmpty(metadata?.Description);
 
     String? coverPath;
-    final cover = _findCoverImage(book);
-    if (cover != null && (cover.Content?.isNotEmpty ?? false)) {
-      final ext = _imageExtension(cover);
+    final cover = await _readCoverImage(book);
+    if (cover != null) {
       final coversDir = await getCoversDirectory();
-      final file = File(p.join(coversDir.path, '$coverKey$ext'));
-      await file.writeAsBytes(cover.Content!, flush: true);
+      final file = File(p.join(coversDir.path, '$coverKey${cover.extension}'));
+      await file.writeAsBytes(cover.bytes, flush: true);
       coverPath = file.path;
     }
 
@@ -106,24 +118,32 @@ String? _nonEmpty(String? s) {
   return (t == null || t.isEmpty) ? null : t;
 }
 
-/// Finds the cover image following the epub2 meta[name=cover] convention,
-/// the epub3 cover-image manifest property, a "cover"-named image, or as a
-/// last resort the largest embedded image.
-epubx.EpubByteContentFile? _findCoverImage(epubx.EpubBook book) {
+class _CoverImage {
+  final List<int> bytes;
+  final String extension;
+  _CoverImage(this.bytes, this.extension);
+}
+
+/// Reads the cover image, trying candidates in priority order: the epub2
+/// meta[name=cover] convention, the epub3 cover-image manifest property, a
+/// "cover"-named image, then the largest embedded image. Candidates whose
+/// content cannot be read are skipped instead of failing the whole book.
+Future<_CoverImage?> _readCoverImage(epubx.EpubBookRef book) async {
   final images = book.Content?.Images;
   if (images == null || images.isEmpty) return null;
 
-  epubx.EpubByteContentFile? byHref(String? href) {
-    if (href == null || href.isEmpty) return null;
-    if (images.containsKey(href)) return images[href];
+  Iterable<EpubByteContentFileRef> byHref(String? href) sync* {
+    if (href == null || href.isEmpty) return;
+    if (images.containsKey(href)) yield images[href]!;
     for (final entry in images.entries) {
-      if (entry.key.endsWith(href) || href.endsWith(entry.key)) {
-        return entry.value;
+      if (entry.key != href &&
+          (entry.key.endsWith(href) || href.endsWith(entry.key))) {
+        yield entry.value;
       }
     }
-    return null;
   }
 
+  final candidates = <EpubByteContentFileRef>[];
   final manifestItems = book.Schema?.Package?.Manifest?.Items ?? [];
 
   // epub2: <meta name="cover" content="<manifest item id>"/>
@@ -132,41 +152,50 @@ epubx.EpubByteContentFile? _findCoverImage(epubx.EpubBook book) {
     if (meta.Name?.toLowerCase() == 'cover' && meta.Content != null) {
       final id = meta.Content!;
       for (final item in manifestItems) {
-        if (item.Id == id) {
-          final found = byHref(item.Href);
-          if (found != null) return found;
-        }
+        if (item.Id == id) candidates.addAll(byHref(item.Href));
       }
       // Some books put the href directly in the content attribute
-      final direct = byHref(id);
-      if (direct != null) return direct;
+      candidates.addAll(byHref(id));
     }
   }
 
   // epub3: manifest item with properties="cover-image"
   for (final item in manifestItems) {
     if (item.Properties?.toLowerCase().contains('cover-image') ?? false) {
-      final found = byHref(item.Href);
-      if (found != null) return found;
+      candidates.addAll(byHref(item.Href));
     }
   }
 
   // An image whose path mentions "cover"
   for (final entry in images.entries) {
-    if (entry.key.toLowerCase().contains('cover')) return entry.value;
+    if (entry.key.toLowerCase().contains('cover')) candidates.add(entry.value);
   }
 
-  // Fall back to the largest image — usually the cover in practice
-  epubx.EpubByteContentFile? largest;
-  for (final img in images.values) {
-    if ((img.Content?.length ?? 0) > (largest?.Content?.length ?? 0)) {
-      largest = img;
+  for (final candidate in candidates) {
+    try {
+      final bytes = await candidate.readContent();
+      if (bytes.isNotEmpty) {
+        return _CoverImage(bytes, _imageExtension(candidate));
+      }
+    } catch (_) {
+      // Broken entry — try the next candidate
     }
+  }
+
+  // Fall back to the largest readable image — usually the cover in practice
+  _CoverImage? largest;
+  for (final img in images.values) {
+    try {
+      final bytes = await img.readContent();
+      if (bytes.length > (largest?.bytes.length ?? 0)) {
+        largest = _CoverImage(bytes, _imageExtension(img));
+      }
+    } catch (_) {}
   }
   return largest;
 }
 
-String _imageExtension(epubx.EpubByteContentFile img) {
+String _imageExtension(EpubContentFileRef img) {
   final mime = img.ContentMimeType?.toLowerCase() ?? '';
   if (mime.contains('png')) return '.png';
   if (mime.contains('gif')) return '.gif';

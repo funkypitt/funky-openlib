@@ -692,8 +692,10 @@ class WebDavSyncService {
   /// entries missing covers/metadata are backfilled from the epub itself.
   Future<void> _cleanupLibraryOnce(
       String bookStorageDir, Set<String> ignoredExternal) async {
+    // V2: re-run once with the lazy epub reader, which extracts metadata
+    // from books the v1.3.2 eager reader could not parse.
     try {
-      final done = await _database.getPreference('libraryDedupePassV1');
+      final done = await _database.getPreference('libraryDedupePassV2');
       if (done.toString() == '1') return;
     } catch (_) {
       // Preference missing — pass has not run yet.
@@ -758,7 +760,7 @@ class WebDavSyncService {
               tag: 'WebDavSync');
         }
       }
-      await _database.savePreference('libraryDedupePassV1', '1');
+      await _database.savePreference('libraryDedupePassV2', '1');
     } catch (e) {
       _logger.error('Library cleanup failed', tag: 'WebDavSync', error: e);
     }
