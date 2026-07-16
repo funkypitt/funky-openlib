@@ -247,6 +247,46 @@ class WebDavSyncService {
       final booksToDownload =
           remoteBooks.where((b) => !localBookIds.contains(b['id'])).toList();
 
+      // Step 4.5: Adopt external books present in the remote books/ folder
+      // but absent from the manifest (e.g. dropped there by another app or
+      // a browser extension). They get filename-derived metadata and join
+      // the regular download flow, so the rebuilt manifest picks them up.
+      final manifestFileNames = remoteBooks
+          .map((b) =>
+              b['fileName'] as String? ?? '${b['id']}.${b['format']}')
+          .toSet();
+      final localFileNames = localBooks.map((b) => b.getFileName()).toSet();
+      try {
+        final remoteFiles =
+            await client.listDirectory('${client.remotePath}/books');
+        const bookExtensions = ['.epub', '.pdf', '.cbr', '.cbz'];
+        for (final f in remoteFiles) {
+          if (f.isDirectory) continue;
+          final name = f.href;
+          final lower = name.toLowerCase();
+          if (!bookExtensions.any(lower.endsWith)) continue;
+          if (manifestFileNames.contains(name) ||
+              localFileNames.contains(name)) {
+            continue;
+          }
+          final dot = name.lastIndexOf('.');
+          final baseName = name.substring(0, dot);
+          if (localBookIds.contains(baseName)) continue;
+          booksToDownload.add({
+            'id': baseName,
+            'title': baseName.replaceAll('_', ' '),
+            'format': lower.substring(dot + 1),
+            'fileName': name,
+            'link': '',
+          });
+          _logger.info('Adopting external book from server: $name',
+              tag: 'WebDavSync');
+        }
+      } catch (e) {
+        _logger.error('Failed to scan remote books folder',
+            tag: 'WebDavSync', error: e);
+      }
+
       final totalTransfers = booksToUpload.length + booksToDownload.length;
       var completedTransfers = 0;
 
@@ -268,7 +308,8 @@ class WebDavSyncService {
           final fileName = book.getFileName();
           final localFile = File('$bookStorageDir/$fileName');
           if (await localFile.exists()) {
-            await client.uploadFile('books/$fileName', localFile);
+            await client.uploadFile(
+                'books/${Uri.encodeComponent(fileName)}', localFile);
             _logger.info('Uploaded: ${book.title}', tag: 'WebDavSync');
           } else {
             _logger.warning('File not found for upload: $fileName',
@@ -298,7 +339,10 @@ class WebDavSyncService {
               '${remoteBook['id']}.${remoteBook['format']}';
           final localPath = '$bookStorageDir/$fileName';
 
-          await client.downloadFile('books/$fileName', localPath);
+          // Encode the segment: adopted external filenames may contain
+          // characters that are invalid in a raw URL path ('#', '?', ...)
+          await client.downloadFile(
+              'books/${Uri.encodeComponent(fileName)}', localPath);
 
           await _database.insert(MyBook(
             id: remoteBook['id'] as String,
@@ -528,7 +572,7 @@ class WebDavSyncService {
 
   Future<void> _syncAnnotationsForBook(
       WebDavClient client, String fileName) async {
-    final remotePath = 'annotations/$fileName.json';
+    final remotePath = 'annotations/${Uri.encodeComponent('$fileName.json')}';
 
     // Remote annotations keyed by id
     final remoteMap = <String, Annotation>{};
