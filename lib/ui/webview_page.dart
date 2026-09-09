@@ -14,6 +14,7 @@ import 'package:path_provider/path_provider.dart';
 
 // Project imports:
 import 'package:openlibe_eink_remix/services/platform_utils.dart';
+import 'package:openlibe_eink_remix/services/archive_page_fetcher.dart';
 import 'package:openlibe_eink_remix/services/logger.dart';
 
 class Webview extends ConsumerStatefulWidget {
@@ -73,6 +74,7 @@ class _WebviewState extends ConsumerState<Webview> {
         if (idx > 0) {
           final name = pair.substring(0, idx);
           final value = pair.substring(idx + 1);
+          if (ArchivePageFetcher.isAntiBotCookie(name)) continue;
           await CookieManager.instance().setCookie(
             url: WebUri('https://$domain'),
             name: name,

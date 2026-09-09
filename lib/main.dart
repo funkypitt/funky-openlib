@@ -11,12 +11,14 @@ import 'package:flutter/rendering.dart'; // <-- REQUIRED
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:openlibe_eink_remix/ui/challenge_page.dart';
 import 'package:openlibe_eink_remix/ui/home_page.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 
 // Project imports:
 import 'package:openlibe_eink_remix/services/database.dart' show MyLibraryDb;
+import 'package:openlibe_eink_remix/services/archive_page_fetcher.dart';
 import 'package:openlibe_eink_remix/services/platform_utils.dart';
 import 'package:openlibe_eink_remix/services/update_checker.dart';
 import 'package:openlibe_eink_remix/ui/epub_viewer.dart'
@@ -227,13 +229,25 @@ void main(List<String> args) async {
   );
 }
 
+/// Global navigator so services can push the browser-check page from
+/// outside the widget tree.
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
 class MyApp extends ConsumerWidget {
   final bool onboardingCompleted;
   const MyApp({super.key, this.onboardingCompleted = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ArchivePageFetcher().interactiveSolver ??= (url, userAgent) async {
+      final nav = appNavigatorKey.currentState;
+      if (nav == null) return null;
+      return nav.push<String?>(MaterialPageRoute(
+        builder: (_) => ChallengePage(url: url, userAgent: userAgent),
+      ));
+    };
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       builder: (context, child) {
         final scale = ref.watch(fontSizeScaleProvider);
         return MediaQuery(

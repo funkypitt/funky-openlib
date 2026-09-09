@@ -127,6 +127,7 @@ class DownloadManager {
   // Constants for download completion timing
   // Tasks are removed 30 seconds after completion: 3s for notification clear, then 27s additional delay
   static const Duration _notificationClearDelay = Duration(seconds: 3);
+  static const int _attemptsPerMirror = 3;
   static const Duration _totalCompletionTime = Duration(seconds: 30);
   static final Duration _taskRemovalDelay =
       _totalCompletionTime - _notificationClearDelay;
@@ -576,15 +577,32 @@ class DownloadManager {
           progress: (task.progress * 100).toInt(),
         );
 
-        bool completed = await _downloadFileWithResume(
-          url: currentMirror,
-          savePath: filePath,
-          taskId: taskId,
-          cancelToken: task.cancelToken!,
-        );
-
-        if (completed) {
-          downloadSuccessful = true;
+        // The partner servers behind slow_download drop connections now and
+        // then ("connection reset by peer"); a resumed retry almost always
+        // goes through, and there is often only one mirror to fall back to.
+        for (int attempt = 1;
+            attempt <= _attemptsPerMirror && !downloadSuccessful;
+            attempt++) {
+          bool completed = await _downloadFileWithResume(
+            url: currentMirror,
+            savePath: filePath,
+            taskId: taskId,
+            cancelToken: task.cancelToken!,
+          );
+          if (completed) {
+            downloadSuccessful = true;
+          } else if (attempt < _attemptsPerMirror) {
+            final current = _activeDownloads[taskId];
+            if (current == null ||
+                current.status == DownloadStatus.paused ||
+                current.status == DownloadStatus.cancelled) {
+              return;
+            }
+            _logger.warning('Download attempt failed, retrying',
+                tag: 'DownloadManager',
+                metadata: {'attempt': attempt, 'of': _attemptsPerMirror});
+            await Future.delayed(Duration(seconds: 2 * attempt));
+          }
         }
       } catch (e) {
         if (e is DioException && e.type == DioExceptionType.cancel) {

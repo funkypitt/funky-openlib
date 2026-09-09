@@ -8,6 +8,7 @@ import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart' as dom;
 
 // Project imports:
+import 'package:openlibe_eink_remix/services/archive_page_fetcher.dart';
 import 'package:openlibe_eink_remix/services/instance_manager.dart';
 import 'package:openlibe_eink_remix/services/logger.dart';
 import 'package:openlibe_eink_remix/services/network_error.dart';
@@ -62,58 +63,26 @@ class BookInfoData extends BookData {
 class AnnasArchieve {
   static const String baseUrl = "https://annas-archive.gd"; // Fallback default
 
-  final Dio dio = Dio();
+  /// All page loads go through the fetcher, which knows how to get past the
+  /// DDoS-Guard browser check in front of the archive (plain HTTP first,
+  /// headless WebView when challenged).
+  final ArchivePageFetcher _fetcher = ArchivePageFetcher();
   final InstanceManager _instanceManager = InstanceManager();
   final AppLogger _logger = AppLogger();
-  String _cookie = "";
 
   // Optimized retry settings for faster response
   static const int maxRetriesPerInstance =
       1; // Only 1 retry per instance for speed
-  static const int requestTimeoutSeconds = 8; // Shorter timeout per request
+  // Plain requests answer in a second or two (the fetcher has its own
+  // connect/receive timeouts) and a headless challenge solve takes ~40 s at
+  // most; the manual browser check is paced by the user, so this outer
+  // limit is only a safety net.
+  static const int requestTimeoutSeconds = 300;
   static const int retryDelayMs = 200; // Shorter delay between retries
-
-  Map<String, dynamic> defaultDioHeaders = {
-    "user-agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-  };
 
   /// Set the authentication cookie for all requests
   void setCookie(String cookie) {
-    _cookie = cookie;
-    if (cookie.isNotEmpty) {
-      defaultDioHeaders["cookie"] = cookie;
-    } else {
-      defaultDioHeaders.remove("cookie");
-    }
-  }
-
-  // Check for Cloudflare block in response
-  bool _isCloudflareBlocked(Response response) {
-    // Check cf-mitigated header
-    if (response.headers.value("cf-mitigated") == "challenge") {
-      return true;
-    }
-
-    // Check response body for Cloudflare markers
-    final body = response.data?.toString().toLowerCase() ?? "";
-    final markers = [
-      "checking your browser",
-      "cloudflare",
-      "cf-browser-verification",
-      "just a moment",
-      "enable javascript and cookies",
-      "ray id:",
-      "attention required",
-      "ddos protection",
-    ];
-
-    for (final marker in markers) {
-      if (body.contains(marker)) {
-        return true;
-      }
-    }
-    return false;
+    _fetcher.setLoginCookie(cookie);
   }
 
   // Convert DioException to user-friendly NetworkError with async diagnostics
@@ -134,12 +103,20 @@ class AnnasArchieve {
       return await requestFn(baseUrl);
     }
 
+    // Mirrors whose browser check is already passed go first: each host
+    // needs its own clearance, and asking the user again is the last resort.
+    final cleared = _fetcher.clearedHosts;
+    final ordered = [
+      ...instances.where((i) => cleared.contains(Uri.parse(i.baseUrl).host)),
+      ...instances.where((i) => !cleared.contains(Uri.parse(i.baseUrl).host)),
+    ];
+
     Exception? lastException;
     String? lastUsedHost;
 
     // Try each instance - they should already be sorted by speed from auto-ranking
-    for (int i = 0; i < instances.length; i++) {
-      final instance = instances[i];
+    for (int i = 0; i < ordered.length; i++) {
+      final instance = ordered[i];
       lastUsedHost = instance.baseUrl;
 
       // Fewer retries for subsequent instances (they're slower)
@@ -163,6 +140,14 @@ class AnnasArchieve {
           return result;
         } catch (e) {
           lastException = e is Exception ? e : Exception(e.toString());
+
+          // The browser check failed or was dismissed: another mirror would
+          // only ask the user again, so stop here.
+          if (e is NetworkError && e.type == NetworkErrorType.cloudflareBlock) {
+            _logger.warning('Browser check not passed, not rotating mirrors',
+                tag: 'AnnasArchive', metadata: {'instance': instance.name});
+            rethrow;
+          }
 
           _logger.debug('Instance failed', tag: 'AnnasArchive', metadata: {
             'instance': instance.name,
@@ -206,6 +191,19 @@ class AnnasArchieve {
         .replaceAll(RegExp(r'🔍'), '')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
+  }
+
+  /// Text of an element's own text nodes only. The metadata line on the
+  /// archive ("English [en] · EPUB · 11.9MB · …") now carries an inline
+  /// "Save" link with a large script inside; `.text` would drag all of that
+  /// JavaScript into the info string.
+  String _ownText(dom.Element? element) {
+    if (element == null) return '';
+    final buffer = StringBuffer();
+    for (final node in element.nodes) {
+      if (node is dom.Text) buffer.write(node.text);
+    }
+    return buffer.toString().replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
   String getFormat(String info) {
@@ -269,8 +267,8 @@ class AnnasArchieve {
           publisherRaw != null ? cleanText(publisherRaw) : null;
 
       final infoElement = container.querySelector('div.text-gray-800');
-      // No need for _safeParse here if we only treat info as a string
-      final String? info = infoElement?.text.trim();
+      final String? info =
+          infoElement == null ? null : _ownText(infoElement);
 
       final bool hasMatchingFileType = fileType.isEmpty
           ? (info?.contains(
@@ -360,9 +358,7 @@ class AnnasArchieve {
 
     final String publisher =
         cleanText(publisherLinkElement?.text.trim() ?? "unknown");
-    // NOTE: If you extract any numeric data from the 'info' string later in your app (e.g., file size or page count)
-    // and attempt to convert it to an integer or double, that's where you should use _safeParse.
-    final String info = infoElement?.text.trim() ?? '';
+    final String info = _ownText(infoElement);
 
     return BookInfoData(
       title: title,
@@ -463,24 +459,8 @@ class AnnasArchieve {
 
         _logger.debug('Fetching search results',
             tag: 'AnnasArchive', metadata: {'url': encodedURL});
-        final response = await dio.get(encodedURL,
-            options: Options(headers: defaultDioHeaders));
-
-        // Check for Cloudflare block in the response
-        if (_isCloudflareBlocked(response)) {
-          _logger.warning('Cloudflare block detected in search response',
-              tag: 'AnnasArchive');
-          throw NetworkError(
-            type: NetworkErrorType.cloudflareBlock,
-            userMessage: "Access blocked by Cloudflare protection",
-            solution:
-                "This site is protected and blocking your access.\n\n🔧 Solutions to try:\n• Use a VPN (recommended)\n• Change your DNS to 1.1.1.1 or 8.8.8.8\n• Try a different network\n• Wait a few minutes and retry",
-            technicalDetails: "Cloudflare challenge detected in response",
-            rawResponseBody: response.data?.toString(),
-          );
-        }
-
-        return _parser(response.data, fileType, currentBaseUrl);
+        final page = await _fetcher.fetch(encodedURL);
+        return _parser(page.body, fileType, currentBaseUrl);
       });
 
       _logger.info('Search completed',
@@ -513,34 +493,24 @@ class AnnasArchieve {
         _logger.debug('Calling fast download API',
             tag: 'AnnasArchive', metadata: {'url': fastDownloadUrl});
 
-        final response = await dio.get(fastDownloadUrl,
-            options: Options(headers: defaultDioHeaders));
+        final String body = await _fetcher.fetchText(fastDownloadUrl);
+        dynamic data;
+        try {
+          data = jsonDecode(body);
+        } catch (e) {
+          _logger.warning('Failed to parse fast download JSON response',
+              tag: 'AnnasArchive', error: e.toString());
+          throw Exception('Invalid JSON response');
+        }
 
-        if (response.statusCode == 200 || response.statusCode == 204) {
-          dynamic data = response.data;
-          if (data is String) {
-            try {
-              data = jsonDecode(data);
-            } catch (e) {
-              _logger.warning('Failed to parse fast download JSON response',
-                  tag: 'AnnasArchive', error: e.toString());
-              throw Exception('Invalid JSON response');
-            }
-          }
-
-          if (data is Map && data['download_url'] != null) {
-            _logger.info('Fast download URL obtained', tag: 'AnnasArchive');
-            return data['download_url'];
-          } else {
-            final errorMsg = data is Map ? data['error'] : 'Unknown error';
-            _logger.warning('Fast download URL not found in response',
-                tag: 'AnnasArchive', metadata: {'error': errorMsg});
-            throw Exception(errorMsg ?? 'Fast download URL not found');
-          }
+        if (data is Map && data['download_url'] != null) {
+          _logger.info('Fast download URL obtained', tag: 'AnnasArchive');
+          return data['download_url'];
         } else {
-          _logger.error('Fast download API request failed',
-              tag: 'AnnasArchive', metadata: {'status': response.statusCode});
-          throw Exception('Failed to get fast download URL');
+          final errorMsg = data is Map ? data['error'] : 'Unknown error';
+          _logger.warning('Fast download URL not found in response',
+              tag: 'AnnasArchive', metadata: {'error': errorMsg});
+          throw Exception(errorMsg ?? 'Fast download URL not found');
         }
       });
       return url;
@@ -572,25 +542,10 @@ class AnnasArchieve {
 
         _logger.debug('Fetching book details',
             tag: 'AnnasArchive', metadata: {'url': adjustedUrl});
-        final response = await dio.get(adjustedUrl,
-            options: Options(headers: defaultDioHeaders));
-
-        // Check for Cloudflare block in the response
-        if (_isCloudflareBlocked(response)) {
-          _logger.warning('Cloudflare block detected in book info response',
-              tag: 'AnnasArchive');
-          throw NetworkError(
-            type: NetworkErrorType.cloudflareBlock,
-            userMessage: "Access blocked by Cloudflare protection",
-            solution:
-                "This site is protected and blocking your access.\n\n🔧 Solutions to try:\n• Use a VPN (recommended)\n• Change your DNS to 1.1.1.1 or 8.8.8.8\n• Try a different network\n• Wait a few minutes and retry",
-            technicalDetails: "Cloudflare challenge detected in response",
-            rawResponseBody: response.data?.toString(),
-          );
-        }
+        final page = await _fetcher.fetch(adjustedUrl);
 
         BookInfoData? data =
-            await _bookInfoParser(response.data, adjustedUrl, currentBaseUrl);
+            await _bookInfoParser(page.body, adjustedUrl, currentBaseUrl);
         if (data != null) {
           return data;
         } else {

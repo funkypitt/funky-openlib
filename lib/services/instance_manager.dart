@@ -94,38 +94,40 @@ class InstanceManager {
 
   // Default Anna's Archive mirrors, ordered by reliability.
   // Only verified-reachable domains are shipped as defaults; dead/blocked
-  // mirrors (e.g. .vg, welib.org) were removed to avoid failed downloads.
+  // mirrors (e.g. .vg, welib.org, and since 2026-09 .se/.org which no longer
+  // resolve) were removed to avoid failed downloads.
   // Users can still add custom instances via the Instances page.
   static final List<ArchiveInstance> _defaultInstances = [
-    ArchiveInstance(
-      id: 'annas_archive_se',
-      name: "Anna's Archive (.se)",
-      baseUrl: 'https://annas-archive.se',
-      priority: 1,
-      enabled: true,
-    ),
     ArchiveInstance(
       id: 'annas_archive_gl',
       name: "Anna's Archive (.gl)",
       baseUrl: 'https://annas-archive.gl',
-      priority: 2,
+      priority: 1,
       enabled: true,
     ),
     ArchiveInstance(
       id: 'annas_archive_pk',
       name: "Anna's Archive (.pk)",
       baseUrl: 'https://annas-archive.pk',
-      priority: 3,
+      priority: 2,
       enabled: true,
     ),
     ArchiveInstance(
       id: 'annas_archive_gd',
       name: "Anna's Archive (.gd)",
       baseUrl: 'https://annas-archive.gd',
-      priority: 4,
+      priority: 3,
       enabled: true,
     ),
   ];
+
+  /// Former default mirrors that are dead now; dropped from stored lists so
+  /// existing installs stop trying them first.
+  static const Set<String> _retiredDefaultIds = {
+    'annas_archive_se',
+    'annas_archive_org',
+    'annas_archive_vg',
+  };
 
   /// Get all instances sorted by priority.
   /// If no instances are stored, initializes with default instances.
@@ -134,8 +136,22 @@ class InstanceManager {
       final stored = await _database.getPreference(_storageKey);
 
       final List<dynamic> jsonList = jsonDecode(stored);
-      final instances =
+      var instances =
           jsonList.map((json) => ArchiveInstance.fromJson(json)).toList();
+
+      // Migration: retire dead default mirrors from previously stored lists.
+      final before = instances.length;
+      instances = instances
+          .where((i) => !_retiredDefaultIds.contains(i.id))
+          .toList();
+      if (instances.isEmpty) {
+        instances = List.from(_defaultInstances);
+      }
+      if (instances.length != before) {
+        _logger.info('Retired dead default mirrors', tag: 'InstanceManager',
+            metadata: {'removed': before - instances.length});
+        await _saveInstances(instances);
+      }
 
       // Sort by priority
       instances.sort((a, b) => a.priority.compareTo(b.priority));
@@ -345,9 +361,12 @@ class InstanceManager {
       stopwatch.stop();
       dio.close();
 
+      // 403 is the DDoS-Guard browser check answering: the mirror is up,
+      // the app's fetcher will get past the check when it actually loads pages.
       if (response.statusCode == 200 ||
           response.statusCode == 301 ||
-          response.statusCode == 302) {
+          response.statusCode == 302 ||
+          response.statusCode == 403) {
         return stopwatch.elapsedMilliseconds;
       }
       return null;

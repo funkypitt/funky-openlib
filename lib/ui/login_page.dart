@@ -9,6 +9,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Project imports:
+import 'package:openlibe_eink_remix/services/archive_page_fetcher.dart';
 import 'package:openlibe_eink_remix/services/database.dart';
 import 'package:openlibe_eink_remix/services/download_manager.dart';
 import 'package:openlibe_eink_remix/services/instance_manager.dart';
@@ -36,7 +37,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return '${instance.baseUrl}/account';
   }
 
-  Future<void> _extractAndSaveCookies() async {
+  /// [auto] is true when called from page-load detection rather than the
+  /// Done button: then we stay quiet and keep the page open unless a real
+  /// session cookie is present.
+  Future<void> _extractAndSaveCookies({bool auto = false}) async {
     try {
       final instance = await InstanceManager().getCurrentInstance();
       final url = WebUri(instance.baseUrl);
@@ -44,16 +48,28 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final cookies =
           await CookieManager.instance().getCookies(url: url);
 
-      if (cookies.isEmpty) {
-        _logger.warning('No cookies found after login', tag: 'Login');
+      // Session cookies only; the anti-bot clearance cookies (DDoS-Guard,
+      // Cloudflare) are transient and live in the WebView store.
+      final sessionCookies = cookies
+          .where((c) => !ArchivePageFetcher.isAntiBotCookie(c.name))
+          .toList();
+
+      if (sessionCookies.isEmpty) {
+        if (auto) return;
+        _logger.warning('No session cookies found after login', tag: 'Login');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Not logged in yet')),
+          );
+        }
         return;
       }
 
-      // Build a cookie string from all cookies
       final cookieString =
-          cookies.map((c) => '${c.name}=${c.value}').join('; ');
+          sessionCookies.map((c) => '${c.name}=${c.value}').join('; ');
 
-      _logger.info('Extracted ${cookies.length} cookies', tag: 'Login');
+      _logger.info('Extracted ${sessionCookies.length} session cookies',
+          tag: 'Login');
 
       // Persist to database
       await MyLibraryDb.instance.setBrowserOptions('cookie', cookieString);
@@ -149,8 +165,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   if (urlStr.contains('/account') &&
                       !urlStr.contains('/account/login') &&
                       !urlStr.contains('/account/register')) {
+                    // Skip the anti-bot interstitial that precedes the page.
+                    final dynamic title = await controller.evaluateJavascript(
+                        source: 'document.title');
+                    if (title is String &&
+                        title.toLowerCase().contains('ddos-guard')) {
+                      return;
+                    }
                     // User seems logged in, auto-extract
-                    await _extractAndSaveCookies();
+                    await _extractAndSaveCookies(auto: true);
                   }
                 },
               );

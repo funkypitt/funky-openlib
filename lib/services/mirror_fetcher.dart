@@ -3,9 +3,12 @@ import 'dart:async';
 
 // Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:html/parser.dart' show parse;
 
 // Project imports:
+import 'package:openlibe_eink_remix/services/archive_page_fetcher.dart';
 import 'package:openlibe_eink_remix/services/logger.dart';
+import 'package:openlibe_eink_remix/services/network_error.dart';
 import 'package:openlibe_eink_remix/services/platform_utils.dart';
 
 /// Service to fetch mirror links in the background without showing UI
@@ -31,7 +34,8 @@ class MirrorFetcherService {
       final cookiePairs = _cookie.split('; ');
       for (final pair in cookiePairs) {
         final idx = pair.indexOf('=');
-        if (idx > 0) {
+        if (idx > 0 &&
+            !ArchivePageFetcher.isAntiBotCookie(pair.substring(0, idx))) {
           await CookieManager.instance().setCookie(
             url: WebUri('https://$domain'),
             name: pair.substring(0, idx),
@@ -69,6 +73,31 @@ class MirrorFetcherService {
     final int maxAttempts = isSlowDownload ? 2 : 1;
     final Duration perAttemptTimeout =
         isSlowDownload ? const Duration(seconds: 35) : const Duration(seconds: 20);
+
+    // First try the page over plain HTTP through the archive fetcher: it
+    // carries the anti-bot clearance cookies (or obtains them, asking the
+    // user if need be) and the slow_download page usually ships the link in
+    // its static HTML. Only pages that reveal the link with JavaScript need
+    // the headless WebView below.
+    try {
+      final page = await ArchivePageFetcher().fetch(url);
+      final links = _extractLinksFromHtml(page.body, isSlowDownload);
+      if (links.isNotEmpty) {
+        _logger.info('Mirror links found in static page', tag: 'MirrorFetcher',
+            metadata: {'count': links.length, 'viaWebView': page.viaWebView});
+        return links;
+      }
+      _logger.debug('No link in static page, falling back to headless polling',
+          tag: 'MirrorFetcher');
+    } on NetworkError catch (e) {
+      // Blocked or rate-limited: a headless WebView would see the same page.
+      _logger.warning('Mirror page not reachable', tag: 'MirrorFetcher',
+          metadata: {'type': e.type.name, 'details': e.technicalDetails});
+      return [];
+    } catch (e) {
+      _logger.debug('Static mirror fetch failed, trying headless',
+          tag: 'MirrorFetcher', metadata: {'error': e.toString()});
+    }
 
     // Pre-load cookies once before spinning up the webview(s)
     await _preloadCookies(url);
@@ -181,6 +210,39 @@ class MirrorFetcherService {
         // ignore dispose errors
       }
       _logger.debug('Headless webview disposed', tag: 'MirrorFetcher', metadata: {'attempt': attempt});
+    }
+  }
+
+  /// Static counterpart of [_extractLinks]: same selectors, applied to HTML
+  /// text instead of the live DOM.
+  List<String> _extractLinksFromHtml(String html, bool isSlowDownload) {
+    try {
+      final doc = parse(html);
+      if (isSlowDownload) {
+        final bold = doc.querySelector('p.mb-4.text-xl.font-bold a') ??
+            doc.querySelector('p[class*="font-bold"] a');
+        final href = bold?.attributes['href'];
+        if (href != null && href.startsWith('http')) return [href];
+        for (final a in doc.querySelectorAll('a')) {
+          final h = a.attributes['href'];
+          if (h != null &&
+              h.startsWith('http') &&
+              RegExp(r'download now', caseSensitive: false).hasMatch(a.text)) {
+            return [h];
+          }
+        }
+        return [];
+      }
+      return doc
+          .querySelectorAll('ul>li>a')
+          .map((a) => a.attributes['href'])
+          .whereType<String>()
+          .where((h) => h.startsWith('http'))
+          .toList();
+    } catch (e) {
+      _logger.debug('Static link extraction failed',
+          tag: 'MirrorFetcher', metadata: {'error': e.toString()});
+      return [];
     }
   }
 
