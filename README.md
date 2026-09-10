@@ -7,7 +7,7 @@
 **An open-source e-ink optimized e-book reader with library search capabilities.**
 **Optimized for e-paper displays with paginated reading, adaptive font sizing, and high-contrast themes.**
 
-> Remixed by **funkypitt** with **Claude Opus 4.6** from [OpenLibExtended](https://github.com/warreth/Openlib-Extended) by warreth and [OpenLib](https://github.com/dstark5/Openlib) by dstark5.
+> Remixed by **Pierre Gallaz** (funkypitt) with **Claude Code** (Anthropic) from [OpenLibExtended](https://github.com/warreth/Openlib-Extended) by warreth and [OpenLib](https://github.com/dstark5/Openlib) by dstark5.
 
 [![made-with-flutter](https://img.shields.io/badge/Made%20with-Flutter-4361ee.svg?style=for-the-badge)](https://flutter.dev/)
 [![AGPLv3 License](https://img.shields.io/badge/License-AGPL%20v3-e63946.svg?style=for-the-badge)](https://opensource.org/licenses/)
@@ -45,6 +45,16 @@ flutter run
 ## License
 
 Licensed under [AGPL v3.0](https://www.gnu.org/licenses/agpl-3.0.html). See [LICENSE](LICENSE) for the full text.
+
+## Crédits / Credits
+
+Basé sur / Based on [OpenLib](https://github.com/dstark5/Openlib) by dstark5 and [OpenLibExtended](https://github.com/warreth/Openlib-Extended) by warreth, AGPL-3.0. Voir / see `NOTICE.md`.
+
+© 2026 Pierre Gallaz. Développé avec [Claude Code](https://claude.com/claude-code) (Anthropic).
+Licence AGPL-3.0, voir `LICENSE`.
+
+© 2026 Pierre Gallaz. Developed with [Claude Code](https://claude.com/claude-code) (Anthropic).
+AGPL-3.0 licence, see `LICENSE`.
 
 ---
 

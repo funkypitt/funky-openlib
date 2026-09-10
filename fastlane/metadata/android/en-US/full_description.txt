@@ -15,3 +15,4 @@ As <i>Anna’s Archive</i> doesn't have an API, the app works by sending request
 <li>Sort Books</li>
 <li>Background downloader</li>
 </ul>
+<p>Pierre Gallaz · developed with Claude Code</p>

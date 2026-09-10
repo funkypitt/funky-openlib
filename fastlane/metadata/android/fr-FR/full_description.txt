@@ -1,0 +1,18 @@
+<p>
+<b><i>OpenLibeExtended-eInk-Remix</i></b> est une application libre et multiplateforme pour télécharger et lire des livres depuis une bibliothèque de l'ombre (<a href='https://annas-archive.pm/' target='_blank' rel='nofollow noopener'>Anna's Archive</a>). Elle intègre un lecteur optimisé pour les écrans e-ink : lecture paginée, taille de police adaptative et thèmes à fort contraste.
+</p>
+<p>
+Comme <i>Anna's Archive</i> n'a pas d'API, l'application envoie des requêtes à <i>Anna's Archive</i>, analyse les réponses, en extrait les miroirs, télécharge le livre et le stocke dans le dossier de documents de l'application.
+</p>
+<b><p>Fonctions principales :</p></b>
+<ul>
+<li>Livres tendance</li>
+<li>Prise en charge du bureau</li>
+<li>Téléchargement et lecture avec le lecteur intégré</li>
+<li>Formats EPUB et PDF</li>
+<li>Ouverture des livres dans votre lecteur préféré</li>
+<li>Filtrage et tri des livres</li>
+<li>Téléchargement en arrière-plan</li>
+</ul>
+<p>Basé sur OpenLib (dstark5) et OpenLibExtended (warreth), AGPL-3.0.</p>
+<p>Pierre Gallaz · développé avec Claude Code</p>

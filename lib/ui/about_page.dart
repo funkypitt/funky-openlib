@@ -69,7 +69,7 @@ class _AboutPageState extends State<AboutPage> {
               const Padding(
                 padding: EdgeInsets.only(left: 7, right: 7, top: 10),
                 child: Text(
-                  "Remixed by funkypitt with Claude Opus 4.6.",
+                  "Pierre Gallaz · developed with Claude Code",
                   style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
@@ -130,8 +130,8 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
               const _UrlText(
-                  text: "GPL v3.0 license",
-                  url: 'https://www.gnu.org/licenses/gpl-3.0.en.html'),
+                  text: "AGPL v3.0 license",
+                  url: 'https://www.gnu.org/licenses/agpl-3.0.en.html'),
             ],
           ),
         ),
