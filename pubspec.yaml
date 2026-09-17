@@ -35,7 +35,8 @@ dependencies:
 
   google_nav_bar: ^5.0.6
 
-  flutter_pdfview: ^1.2.7
+  # 1.4.3+ packs Pdfium aligned for 16 KB pages; 1.4.5 switches Android to hybrid composition (breaking).
+  flutter_pdfview: 1.4.4
   epubx: ^4.0.0
   # syncfusion_flutter_pdfviewer: ^22.2.5
   # pdfx: ^2.4.0

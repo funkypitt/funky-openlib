@@ -5,7 +5,7 @@ workflows:
     max_build_duration: 30
     instance_type: mac_mini_m2
     environment:
-      flutter: stable
+      flutter: 3.41.2  # "stable" (3.47) refuses this project's Gradle 8.7 / AGP 8.6 / Kotlin 2.1
       java: 21
       android_signing:
         - android-key-lm
@@ -38,7 +38,7 @@ workflows:
     max_build_duration: 30
     instance_type: mac_mini_m2
     environment:
-      flutter: stable
+      flutter: 3.41.2  # "stable" (3.47) refuses this project's Gradle 8.7 / AGP 8.6 / Kotlin 2.1
       java: 21
       android_signing:
         - android-key-lm
