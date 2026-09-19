@@ -1,3 +1,5 @@
+![OpenLibe e-Ink Remix](docs/banner.png)
+
 <div align="center">
 
 <img src="assets/icons/appIcon.png" width="150">
@@ -76,3 +78,7 @@ This software connects to third-party services as a search client. The developer
 **No warranty.** This software is provided "as is", without warranty of any kind, express or implied. In no event shall the developer be liable for any claim, damages, or other liability arising from the use of this software.
 
 **By using this application, you acknowledge that you have read and understood this disclaimer and agree to use the software in full compliance with all applicable laws and regulations.**
+
+## Captures d'écran
+
+<img src="docs/screenshot-1.png" width="30%"> <img src="docs/screenshot-2.png" width="30%">
